@@ -1,11 +1,10 @@
-
-
 from src.entities.uav_entities import DataPacket, ACKPacket, HelloPacket, Packet
 from src.utilities import utilities as util
 from src.utilities import config
 
 from scipy.stats import norm
 import abc
+
 
 class BASE_routing(metaclass=abc.ABCMeta):
 
@@ -19,7 +18,7 @@ class BASE_routing(metaclass=abc.ABCMeta):
             self.buckets_probability = self.__init_guassian()
 
         self.current_n_transmission = 0
-        self.hello_messages = {}  #{ drone_id : most recent hello packet}
+        self.hello_messages = {}  # { drone_id : most recent hello packet}
         self.network_disp = simulator.network_dispatcher
         self.simulator = simulator
         self.no_transmission = False
@@ -28,7 +27,7 @@ class BASE_routing(metaclass=abc.ABCMeta):
     def relay_selection(self, geo_neighbors):
         pass
 
-    def routing_close(self, drones, cur_step):
+    def routing_close(self):
         self.no_transmission = False
 
     def drone_reception(self, src_drone, packet: Packet, current_ts):
@@ -70,8 +69,7 @@ class BASE_routing(metaclass=abc.ABCMeta):
         self.send_packets(cur_step)
 
         # close this routing pass
-        self.routing_close(drones, cur_step)
-
+        self.routing_close()
 
     def send_packets(self, cur_step):
         """ procedure 3 -> choice next hop and try to send it the data packet """
@@ -90,7 +88,7 @@ class BASE_routing(metaclass=abc.ABCMeta):
             self.current_n_transmission = 0
             return
 
-       # TODO: Aspetta che lo faccia a ogni drone_retransmission_delta
+        # FLOW 2
         if cur_step % self.simulator.drone_retransmission_delta == 0:
 
             opt_neighbors = []
@@ -104,8 +102,11 @@ class BASE_routing(metaclass=abc.ABCMeta):
                 opt_neighbors.append((hpk, hpk.src_drone))
 
             if len(opt_neighbors) > 0:
+
                 self.simulator.metrics.mean_numbers_of_possible_relays.append(len(opt_neighbors))
+
                 best_neighbor = self.relay_selection(opt_neighbors)  # compute score
+
                 if best_neighbor is not None:
 
                     # send packets
@@ -115,16 +116,23 @@ class BASE_routing(metaclass=abc.ABCMeta):
             self.current_n_transmission += 1
 
     def geo_neighborhood(self, drones, no_error=False):
-        """ returns the list all the Drones that are in self.drone neighbourhood (no matter the distance to depot),
-            in all direction in its transmission range, paired with their distance from self.drone """
+        """
+        @param drones:
+        @param no_error:
+        @return: A list all the Drones that are in self.drone neighbourhood (no matter the distance to depot),
+            in all direction in its transmission range, paired with their distance from self.drone
+        """
 
         closest_drones = []  # list of this drone's neighbours and their distance from self.drone: (drone, distance)
 
         for other_drone in drones:
-            if self.drone.identifier != other_drone.identifier:                                   # not the same drone
-                drones_distance = util.euclidean_distance(self.drone.coords, other_drone.coords)  # distance between two drones
 
-                if drones_distance <= min(self.drone.communication_range, other_drone.communication_range):  # one feels the other & vv
+            if self.drone.identifier != other_drone.identifier:  # not the same drone
+                drones_distance = util.euclidean_distance(self.drone.coords,
+                                                          other_drone.coords)  # distance between two drones
+
+                if drones_distance <= min(self.drone.communication_range,
+                                          other_drone.communication_range):  # one feels the other & vv
 
                     # CHANNEL UNPREDICTABILITY
                     if self.channel_success(drones_distance, no_error=no_error):
@@ -133,10 +141,12 @@ class BASE_routing(metaclass=abc.ABCMeta):
         return closest_drones
 
     def channel_success(self, drones_distance, no_error=False):
-        """ Precondition: two drones are close enough to communicate. Return true if the communication
-        goes through, false otherwise.  """
+        """
+        Precondition: two drones are close enough to communicate. Return true if the communication
+        goes through, false otherwise.
+        """
 
-        assert(drones_distance <= self.drone.communication_range)
+        assert (drones_distance <= self.drone.communication_range)
 
         if no_error:
             return True
@@ -158,7 +168,8 @@ class BASE_routing(metaclass=abc.ABCMeta):
     def unicast_message(self, packet, src_drone, dst_drone, curr_step):
         """ send a message to my neigh drones"""
         # Broadcast using Network dispatcher
-        self.simulator.network_dispatcher.send_packet_to_medium(packet, src_drone, dst_drone, curr_step + config.LIL_DELTA)
+        self.simulator.network_dispatcher.send_packet_to_medium(packet, src_drone, dst_drone,
+                                                                curr_step + config.LIL_DELTA)
 
     def gaussian_success_handler(self, drones_distance):
         """ get the probability of the drone bucket """
@@ -193,5 +204,3 @@ class BASE_routing(metaclass=abc.ABCMeta):
             buckets_probability[bk] = prob
 
         return buckets_probability
-
-

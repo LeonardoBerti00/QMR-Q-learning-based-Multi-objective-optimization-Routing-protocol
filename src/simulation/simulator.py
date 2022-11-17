@@ -1,4 +1,3 @@
-
 from src.drawing import pp_draw
 from src.entities.uav_entities import *
 from src.simulation.metrics import Metrics
@@ -45,6 +44,7 @@ class Simulator:
                  communication_error_type=config.CHANNEL_ERROR_TYPE,
                  prob_size_cell_r=config.CELL_PROB_SIZE_R,
                  simulation_name=""):
+        self.cur_step = None
         self.drone_com_range = drone_com_range
         self.drone_sen_range = drone_sen_range
         self.drone_speed = drone_speed
@@ -88,7 +88,7 @@ class Simulator:
         self.__set_simulation()
         self.__set_metrics()
 
-        self.simulation_name = "test-" + utilities.date() + "_" + str(simulation_name) + "_" + str(self.seed)
+        self.simulation_name = "simulation-" + utilities.date() + "_" + str(simulation_name) + "_" + str(self.seed) + "_" + str(self.n_drones) + "_" + str(self.routing_algorithm)
         self.simulation_test_dir = self.simulation_name + "/"
 
         self.start = time.time()
@@ -133,7 +133,6 @@ class Simulator:
         if self.show_plot or config.SAVE_PLOT:
             self.draw_manager = pp_draw.PathPlanningDrawer(self.environment, self, borders=True)
 
-
     def __sim_name(self):
         """
             return the identification name for
@@ -166,7 +165,8 @@ class Simulator:
         self.draw_manager.draw_simulation_info(cur_step=cur_step, max_steps=self.len_simulation)
 
         # rendering
-        self.draw_manager.update(show=self.show_plot, save=config.SAVE_PLOT, filename=self.sim_save_file + str(cur_step) + ".png")
+        self.draw_manager.update(show=self.show_plot, save=config.SAVE_PLOT,
+                                 filename=self.sim_save_file + str(cur_step) + ".png")
 
     def increase_meetings_probs(self, drones, cur_step):
         """ Increases the probabilities of meeting someone. """
@@ -180,7 +180,7 @@ class Simulator:
             cells.add(int(cell_index[0]))
 
         for cell, cell_center in utilities.TraversedCells.all_centers(self.env_width, self.env_height,
-                                                                          self.prob_size_cell):
+                                                                      self.prob_size_cell):
 
             index_cell = int(cell[0])
             old_vals = self.cell_prob_map[index_cell]
@@ -193,9 +193,13 @@ class Simulator:
             self.cell_prob_map[index_cell] = old_vals
 
     def run(self):
-        """ the method starts the simulation """
-        cells_to_travel = None
+        """
+        Simulator main function
+        @return: None
+        """
+
         for cur_step in tqdm(range(self.len_simulation)):
+            
             self.cur_step = cur_step
             # check for new events and remove the expired ones from the environment
             # self.environment.update_events(cur_step)
@@ -207,7 +211,6 @@ class Simulator:
             self.event_generator.handle_events_generation(cur_step, self.drones)
 
             for drone in self.drones:
-
                 # 1. update expired packets on drone buffers
                 # 2. try routing packets vs other drones or depot
                 # 3. actually move the drone towards next waypoint or depot
@@ -224,7 +227,8 @@ class Simulator:
                 self.__plot(cur_step)
 
         if config.DEBUG:
-            print("End of simulation, sim time: " + str((cur_step + 1) * self.time_step_duration) + " sec, #iteration: " + str(cur_step + 1))
+            print("End of simulation, sim time: " + str(
+                (cur_step + 1) * self.time_step_duration) + " sec, #iteration: " + str(cur_step + 1))
 
     def close(self):
         """ do some stuff at the end of simulation"""

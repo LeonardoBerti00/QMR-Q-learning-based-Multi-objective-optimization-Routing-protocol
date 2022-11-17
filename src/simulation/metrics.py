@@ -78,7 +78,10 @@ class Metrics:
         return np.nanmean(event_delivery_times)       
 
     def other_metrics(self):
-        """ Metrics evaluated post execution """
+        """
+        Post-execution metrics
+        @return: None
+        """
 
         # the number of all the events generated during the simulation
         self.number_of_generated_events = len(self.events)
@@ -111,32 +114,43 @@ class Metrics:
             # time between event generation and packet delivery to depot -> dict to help computation
             event_delivery_times_dict[pck.event_ref.identifier].append(delivery_ts - pck.event_ref.current_time)
 
-        # maps every event to the minimum delay of the packet arrival to the depot
+        # maps every event to the minimum delay of the packet arrival at the depot
         event_delivery_times = []
         for ev_id in event_delivery_times_dict.keys():
             event_delivery_times.append(np.nanmin(event_delivery_times_dict[ev_id]))
 
         # averaged delays over all packets/events
         self.event_delivery_times = event_delivery_times
-        self.packet_mean_delivery_time = np.mean(packet_delivery_times)
-        self.event_mean_delivery_time = np.mean(event_delivery_times)
+        self.packet_mean_delivery_time = np.mean(packet_delivery_times) * self.simulator.time_step_duration
+        self.event_mean_delivery_time = np.mean(event_delivery_times) * self.simulator.time_step_duration
 
     def print_overall_stats(self):
-        """ print the overall stats of the alg execution """
+        """
+        print the overall stats of the alg execution
+        @return:
+        """
         self.other_metrics()
+        print(f"*** Relays ***")
         print("Mean number of relays: ", np.nanmean(self.mean_numbers_of_possible_relays))
-        print("number_of_generated_events", self.number_of_generated_events)
-        print("number_of_detected_events", self.number_of_detected_events)
-        print("all_control_packets_in_simulation", self.all_control_packets_in_simulation)
-        print("all_data_packets_in_simulation", self.all_data_packets_in_simulation)
-        print("number_of_events_to_depot", self.number_of_events_to_depot)
-        print("number_of_packets_to_depot", self.number_of_packets_to_depot)
-        print("packet_mean_delivery_time", self.packet_mean_delivery_time)
-        print("event_mean_delivery_time", self.event_mean_delivery_time)
+
+        print(f"*** Events ***")
+        print("Number of generated events: ", self.number_of_generated_events)
+        print("Number of detected events: ", self.number_of_detected_events)
+        print("Number of events to depot: ", self.number_of_events_to_depot)
+        print("Event mean delivery time (seconds): ", self.event_mean_delivery_time)
+
+        print(f"*** Packets ***")
+        print("Control packets exchanged during simulation: ", self.all_control_packets_in_simulation)
+        print("Data packets exchanged during simulation: ", self.all_data_packets_in_simulation)
+        print("Number of packets to depot: ", self.number_of_packets_to_depot)
+        print("Packet mean delivery time (seconds): ", self.packet_mean_delivery_time)
 
     def info_mission(self):
-        """ save all the mission / sim setup """
-        # TODO: add all attributes of simulation
+        """
+        save all the mission / sim setup
+        @return: None
+        """
+
         self.mission_setup = {
             "len_simulation": self.simulator.len_simulation,
             "time_step_duration": self.simulator.time_step_duration,

@@ -1,8 +1,7 @@
 
 from src.routing_algorithms.georouting import GeoRouting
+from src.routing_algorithms.q_learning_routing import QLearningRouting
 from src.routing_algorithms.random_routing import RandomRouting
-from src.routing_algorithms.georouting_andrea import AndreaGeoRouting
-
 from enum import Enum
 
 
@@ -38,10 +37,10 @@ RANDOM_START_POINT = True  # bool whether the drones start the mission at random
 # ------------------------------- CONSTANTS ------------------------------- #
 
 DEBUG = False                         # bool: whether to print debug strings or not.
-EXPERIMENTS_DIR = "data/experiments/"  # output data : the results of the simulation
+EXPERIMENTS_DIR = "data/evaluation_tests/"  # output data : the results of the simulation
 
 # drawaing
-PLOT_SIM = True      # bool: whether to plot or not the simulation.
+PLOT_SIM = False      # bool: whether to plot or not the simulation.
 WAIT_SIM_STEP = 0 #.1     # float: seconds, pauses the rendering for 'DELAY_PLOT' seconds.
 SKIP_SIM_STEP = 5      # int: steps, plot the simulation every 'RENDERING_STEP' steps. At least 1.
 DRAW_SIZE = 700       # int: size of the drawing window.
@@ -85,7 +84,7 @@ DEPOT_COO = (750, 0)             # (float, float): coordinates of the depot.
 class RoutingAlgorithm(Enum):
     GEO = GeoRouting
     RND = RandomRouting
-    AND_GEO = AndreaGeoRouting
+    QL = QLearningRouting
 
     @staticmethod
     def keylist():
@@ -101,7 +100,7 @@ class ChannelError(Enum):
         return list(map(lambda c: c.name, ChannelError))
 
 
-ROUTING_ALGORITHM = RoutingAlgorithm.AND_GEO
+ROUTING_ALGORITHM = RoutingAlgorithm.RND
 CHANNEL_ERROR_TYPE = ChannelError.GAUSSIAN
 
 COMMUNICATION_P_SUCCESS = 1   # float: probability to have success in a communication.
