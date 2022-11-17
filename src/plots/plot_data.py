@@ -83,9 +83,9 @@ def plot(algorithm: list,
 
 if __name__ == "__main__":
     """
-    You can run this file to get the plots.
+    Run this file to get the plots.
     Of course, since you need to plot more than a single data series (one for each algorithm) you need to modify
-    plot() in a way that it can handle a multi-dimensional data. 
+    plot() in a way that it can handle a multi-dimensional data (one data series for each algorithm). 
     y_data and y_data_std could be for example a list of lists o a dictionary containing lists. It up to you to decide
     how to deal with data
     """

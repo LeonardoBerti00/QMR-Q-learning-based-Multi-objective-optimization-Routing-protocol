@@ -8,14 +8,14 @@
 
 
 #test others algorithms
-for nd in "2" "3";
+for nd in "5" "10" "15" "20" "25" "30";
 do
     for alg in "GEO" "RND" "QL";
     do
         echo "run: ${alg} - ndrones ${nd} "
-        python -m src.experiments.experiment_ndrones -nd ${nd} -i_s 0 -e_s 1 -alg ${alg} &
-        python -m src.experiments.experiment_ndrones -nd ${nd} -i_s 1 -e_s 2 -alg ${alg} &
-        python -m src.experiments.experiment_ndrones -nd ${nd} -i_s 2 -e_s 3 -alg ${alg} &
+        python -m src.experiments.experiment_ndrones -nd ${nd} -i_s 0 -e_s 10 -alg ${alg} &
+        python -m src.experiments.experiment_ndrones -nd ${nd} -i_s 10 -e_s 20 -alg ${alg} &
+        python -m src.experiments.experiment_ndrones -nd ${nd} -i_s 20 -e_s 30 -alg ${alg} &
     done;
 done;
 wait

@@ -25,3 +25,13 @@ def compute_data_avg_std(path: str):
     # TODO: Implement your code HERE
 
     pass
+
+
+if __name__ == "__main__":
+    """
+    You can run this file to test your script
+    """
+
+    path = "data/evaluation_tests"
+
+    compute_data_avg_std(path=path)
