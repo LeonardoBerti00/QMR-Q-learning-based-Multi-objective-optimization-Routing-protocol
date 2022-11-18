@@ -11,8 +11,8 @@ class QLearningRouting(BASE_routing):
         """
         This function returns the best relay to send packets.
 
-        @param opt_neighbors: a list of drones
-        @return: The best drone to use as relay
+        @param opt_neighbors: a list of tuples (hello_packet, drone)
+        @return: The best drone to use as relay or None if no relay is selected
         """
         # TODO: Implement your code HERE
 

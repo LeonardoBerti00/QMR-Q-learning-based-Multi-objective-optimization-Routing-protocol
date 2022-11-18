@@ -9,9 +9,10 @@ class RandomRouting(BASE_routing):
 
     def relay_selection(self, opt_neighbors):
         """
-        Random relay selection
-        @param opt_neighbors: the list of all the neighbors
-        @return: a random relay
+        This function returns a random relay for packets.
+
+        @param opt_neighbors: a list of tuples (hello_packet, drone)
+        @return: a random drone as relay
         """
 
         return self.simulator.rnd_routing.choice([v[1] for v in opt_neighbors])

@@ -8,10 +8,10 @@ class GeoRouting(BASE_routing):
 
     def relay_selection(self, opt_neighbors):
         """
-        This function returns the best relay to send packets.
+        This function returns a relay for packets according to geographic routing using C2S criteria.
 
-        @param opt_neighbors: a list of drones
-        @return: The best drone to use as relay
+        @param opt_neighbors: a list of tuples (hello_packet, drone)
+        @return: The best drone to use as relay or None if no relay is selected
         """
 
         # TODO: Implement your code HERE
