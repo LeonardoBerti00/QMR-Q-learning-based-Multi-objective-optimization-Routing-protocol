@@ -98,7 +98,7 @@ class Metrics:
         self.number_of_packets_to_depot = len(self.drones_packets_to_depot)  # may contain duplicates
         
         # NOTE: THE DEPOT PACKETS ARE NOT COUNTED, WE ADD THEM HERE!! 
-        self.all_data_packets_in_simulation += len(self.drones_packets_to_depot)
+        # self.all_data_packets_in_simulation += len(self.drones_packets_to_depot)
 
         # mean delivery time 
         packet_delivery_times = []
@@ -141,9 +141,10 @@ class Metrics:
 
         print(f"*** Packets ***")
         print("Control packets exchanged during simulation: ", self.all_control_packets_in_simulation)
-        print("Data packets exchanged during simulation: ", self.all_data_packets_in_simulation)
+        print("Data packets generated during simulation: ", self.all_data_packets_in_simulation)
         print("Number of packets to depot: ", self.number_of_packets_to_depot)
         print("Packet mean delivery time (seconds): ", self.packet_mean_delivery_time)
+        print("Packet delivery ratio: ", self.number_of_packets_to_depot/self.all_data_packets_in_simulation)
 
     def info_mission(self):
         """
@@ -189,6 +190,7 @@ class Metrics:
         out_results["packet_mean_delivery_time"] = self.packet_mean_delivery_time
         out_results["event_mean_delivery_time"] = self.event_mean_delivery_time
         out_results["time_on_mission"] = self.time_on_mission
+        out_results["packet_delivery_ratio"] = self.number_of_packets_to_depot/self.all_data_packets_in_simulation
         out_results["all_control_packets_in_simulation"] = self.all_control_packets_in_simulation
         out_results["all_data_packets_in_simulation"] = self.all_data_packets_in_simulation
         out_results["all_events"] = [ev.to_json() for ev in self.events]

@@ -205,6 +205,17 @@ class Depot(Entity):
         self.__buffer += packets_to_offload
 
         for pck in packets_to_offload:
+
+            if self.simulator.routing_algorithm.name not in "GEO" "RND":
+
+                feedback = 1
+                delivery_delay = cur_step - pck.event_ref.current_time
+
+                self.simulator.drones[0].routing_algorithm.feedback(drone,
+                                                                    pck.event_ref.identifier,
+                                                                    delivery_delay,
+                                                                    feedback)
+
             # add metrics: all the packets notified to the depot
             self.simulator.metrics.drones_packets_to_depot.add((pck, cur_step))
             self.simulator.metrics.drones_packets_to_depot_list.append((pck, cur_step))
@@ -247,7 +258,10 @@ class Drone(Entity):
 
     def update_packets(self, cur_step):
         """
-        removes the expired packets from the buffer
+        Removes the expired packets from the buffer
+
+        @param cur_step: Integer representing the current time step
+        @return:
         """
         to_remove_packets = 0
         tmp_buffer = []
@@ -257,8 +271,20 @@ class Drone(Entity):
             if not pck.is_expired(cur_step):
                 tmp_buffer.append(pck)  # append again only if it is not expired
                 self.tightest_event_deadline = np.nanmin([self.tightest_event_deadline, pck.event_ref.deadline])
+
             else:
+
                 to_remove_packets += 1
+
+                if self.simulator.routing_algorithm.name not in "GEO" "RND":
+
+                    feedback = -1
+                    drone = self
+
+                    self.simulator.drones[0].routing_algorithm.feedback(drone,
+                                                                        pck.event_ref.identifier,
+                                                                        self.simulator.event_duration,
+                                                                        feedback)
         self.__buffer = tmp_buffer
 
         if self.buffer_length() == 0:
@@ -305,6 +331,7 @@ class Drone(Entity):
         pk = ev.as_packet(cur_step, self)  # the packet of the event
         if not self.move_routing and not self.come_back_to_mission:
             self.__buffer.append(pk)
+            self.simulator.metrics.all_data_packets_in_simulation += 1
         else:  # store the events that are missing due to movement routing
             self.simulator.metrics.events_not_listened.add(ev)
 

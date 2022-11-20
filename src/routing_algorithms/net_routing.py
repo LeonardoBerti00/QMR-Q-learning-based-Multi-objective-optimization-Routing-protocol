@@ -11,9 +11,14 @@ class MediumDispatcher:
         self.metric_class = metric_class
 
     def send_packet_to_medium(self, packet, src_drone, dst_drone, to_send_ts):
+
         if isinstance(packet, DataPacket):
-            self.metric_class.all_data_packets_in_simulation += 1
+
+            #self.metric_class.all_data_packets_in_simulation += 1
+            pass
+
         else:
+
             self.metric_class.all_control_packets_in_simulation += 1
 
         self.packets.append((packet, src_drone, dst_drone, to_send_ts))
