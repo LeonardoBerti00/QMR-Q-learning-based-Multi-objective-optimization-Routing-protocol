@@ -87,9 +87,6 @@ class BASE_routing(metaclass=abc.ABCMeta):
             self.current_n_transmission = 0
             return
 
-        if self.drone.identifier != 0:
-            return
-
         if cur_step % self.simulator.drone_retransmission_delta == 0:
 
             opt_neighbors = []
