@@ -211,7 +211,9 @@ class Depot(Entity):
                 feedback = 1
                 delivery_delay = cur_step - pck.event_ref.current_time
 
-                self.simulator.drones[0].routing_algorithm.feedback(drone,
+                #print(len(self.simulator.drones))
+                for i in range(len(self.simulator.drones)):
+                    self.simulator.drones[i].routing_algorithm.feedback(drone,
                                                                     pck.event_ref.identifier,
                                                                     delivery_delay,
                                                                     feedback)
@@ -280,11 +282,13 @@ class Drone(Entity):
 
                     feedback = -1
                     drone = self
+                    #print(len(self.simulator.drones))
+                    for i in range(len(self.simulator.drones)):
+                        self.simulator.drones[i].routing_algorithm.feedback(drone,
+                                                                            pck.event_ref.identifier,
+                                                                            self.simulator.event_duration,
+                                                                            feedback)
 
-                    self.simulator.drones[0].routing_algorithm.feedback(drone,
-                                                                        pck.event_ref.identifier,
-                                                                        self.simulator.event_duration,
-                                                                        feedback)
         self.__buffer = tmp_buffer
 
         if self.buffer_length() == 0:

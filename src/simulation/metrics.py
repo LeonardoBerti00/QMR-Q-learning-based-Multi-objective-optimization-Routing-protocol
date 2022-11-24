@@ -219,9 +219,11 @@ class Metrics:
         """ save all the metrics into a json file """
         out = self.__dictionary_represenation()
         js = json.dumps(out)
-        f = open(filename, "w")
-        f.write(js)
-        f.close()
+        try:
+            f = open(filename, "w")
+            f.write(js)
+            f.close()
+        except: print()
 
     def __str__(self):
         return self.__repr__()
