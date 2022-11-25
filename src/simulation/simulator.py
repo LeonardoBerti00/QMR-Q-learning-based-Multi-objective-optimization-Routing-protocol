@@ -19,11 +19,10 @@ you can initialize the Simulator with non default values.
 
 class Simulator:
 
-    def __init__(self,
-                 len_simulation=config.SIM_DURATION,
+    def __init__(self, n_drones,
+                 len_simulation,
                  time_step_duration=config.TS_DURATION,
                  seed=config.SEED,
-                 n_drones=config.N_DRONES,
                  env_width=config.ENV_WIDTH,
                  env_height=config.ENV_HEIGHT,
                  drone_com_range=config.COMMUNICATION_RANGE_DRONE,

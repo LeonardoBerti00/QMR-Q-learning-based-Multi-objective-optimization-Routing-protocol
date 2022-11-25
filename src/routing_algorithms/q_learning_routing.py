@@ -4,6 +4,9 @@ from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
 import numpy as np
 
+
+
+
 class QLearningRouting(BASE_routing):
 
 
@@ -11,9 +14,11 @@ class QLearningRouting(BASE_routing):
         BASE_routing.__init__(self, drone, simulator)
         self.taken_actions = {}  # id event : (old_state, old_action)
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
-        self.Q = np.zeros((self.num_cells, int(self.simulator.n_drones)))
-        self.a = 0.1
+        self.Q = np.ones((self.num_cells, int(self.simulator.n_drones)))
+        self.a = 0.2
         self.l = 0.1
+        self.eps = 20
+        self.div = 50
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -24,29 +29,33 @@ class QLearningRouting(BASE_routing):
         @param delay: packet delay
         @param outcome: -1 or 1 (read below)
         """
-        # Packets that we delivered and still need a feedback
-        # print(self.taken_actions)
 
-        #if(outcome == 1):
+
+
         if id_event in self.taken_actions:
-            state, action = self.taken_actions[id_event]
-            #state = int(state)
-            #action = int(action)
+            array = self.taken_actions[id_event]
             maxx = -1111111111
-            for i in range(self.Q.shape[0]):
+            for i in range(self.Q.shape[0]):          #select the best Q[s, a]
                 for j in range(self.Q.shape[1]):
                     if (self.Q[i, j] > maxx):
                         max_action = j
                         max_state = i
                         maxx = self.Q[i, j]
 
-            self.Q[state, action] = self.Q[state, action] + self.a * (outcome + self.l * self.Q[max_state, max_action] - self.Q[state, action])
+            for i in range(len(array)):
+                state, action = array[i]
+                reward = self.computeReward(id_event, outcome, delay, state, action)
+                self.Q[state, action] = self.Q[state, action] + self.a * (reward + self.l * self.Q[max_state, max_action] - self.Q[state, action])
+
+            del self.taken_actions[id_event]
 
         # Be aware, due to network errors we can give the same event to multiple drones and receive multiple
         # feedback for the same packet!!
-        if id_event in self.taken_actions:
-            state, action = self.taken_actions[id_event]
-            del self.taken_actions[id_event]
+
+    def computeReward(self, id_event, outcome, delay, state, action):
+        reward = outcome
+        return reward * (delay/self.div)
+
 
     def relay_selection(self, opt_neighbors: list, packet):
         """
@@ -63,11 +72,25 @@ class QLearningRouting(BASE_routing):
 
         state = int(cell_index)
         action = None
-        #print(len(opt_neighbors))
-        #print(self.drone.identifier)
-        maxx = -1000000
+
+
+        chosen = self.egreedy(opt_neighbors, state)
+        if (chosen == None):
+            id = self.drone.identifier
+        else:
+            id = chosen.identifier
+
+        if (packet.event_ref.identifier in self.taken_actions):            #if I've done the same action with the same packet
+            self.taken_actions[packet.event_ref.identifier].append((state, int(id)))
+        else:
+            self.taken_actions[packet.event_ref.identifier] = [(state, int(id))]
+        #print()
+        return chosen
+
+    def egreedy(self, opt_neighbors, state):
         r = random.randint(1, 100)
-        if (r > 20):
+        maxx = -1000000
+        if (r > self.eps):
             for i in range(len(opt_neighbors)):
                 id = int(opt_neighbors[i][1].identifier)
                 if (self.Q[state, id] > maxx):
@@ -82,7 +105,4 @@ class QLearningRouting(BASE_routing):
                 return None
             else:
                 chosen = opt_neighbors[r][1]
-
-        self.taken_actions[packet.event_ref.identifier] = (state, int(chosen.identifier))
-
         return chosen

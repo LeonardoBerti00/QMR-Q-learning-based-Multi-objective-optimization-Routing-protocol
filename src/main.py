@@ -5,9 +5,10 @@ from src.simulation.simulator import Simulator
 def main():
     """ the place where to run simulations and experiments. """
 
-    sim = Simulator()   # empty constructor means that all the parameters of the simulation are taken from src.utilities.config.py
-    sim.run()            # run the simulation
-    sim.close()
+    for i in range(6):
+        sim = Simulator(5, 15000)   # empty constructor means that all the parameters of the simulation are taken from src.utilities.config.py
+        sim.run()            # run the simulation
+        sim.close()
 
 
 if __name__ == "__main__":

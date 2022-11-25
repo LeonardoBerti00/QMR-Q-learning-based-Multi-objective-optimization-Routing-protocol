@@ -212,11 +212,11 @@ class Depot(Entity):
                 delivery_delay = cur_step - pck.event_ref.current_time
 
                 #print(len(self.simulator.drones))
-                for i in range(len(self.simulator.drones)):
-                    self.simulator.drones[i].routing_algorithm.feedback(drone,
-                                                                    pck.event_ref.identifier,
-                                                                    delivery_delay,
-                                                                    feedback)
+                for drone in self.simulator.drones:
+                    drone.routing_algorithm.feedback(drone,
+                                                     pck.event_ref.identifier,
+                                                     delivery_delay,
+                                                     feedback)
 
             # add metrics: all the packets notified to the depot
             self.simulator.metrics.drones_packets_to_depot.add((pck, cur_step))
@@ -283,11 +283,11 @@ class Drone(Entity):
                     feedback = -1
                     drone = self
                     #print(len(self.simulator.drones))
-                    for i in range(len(self.simulator.drones)):
-                        self.simulator.drones[i].routing_algorithm.feedback(drone,
-                                                                            pck.event_ref.identifier,
-                                                                            self.simulator.event_duration,
-                                                                            feedback)
+                    for drone in self.simulator.drones:
+                        drone.routing_algorithm.feedback(drone,
+                                                         pck.event_ref.identifier,
+                                                         self.simulator.event_duration,
+                                                         feedback)
 
         self.__buffer = tmp_buffer
 
