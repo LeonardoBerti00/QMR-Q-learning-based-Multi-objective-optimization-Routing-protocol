@@ -15,7 +15,7 @@ class QLearningRouting(BASE_routing):
         self.taken_actions = {}  # id event : (old_state, old_action)
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.Q = np.ones((self.num_cells, int(self.simulator.n_drones)))
-        self.a = 0.2
+        self.a = 0.1
         self.l = 0.1
         self.eps = 20
         self.div = 50
@@ -29,8 +29,6 @@ class QLearningRouting(BASE_routing):
         @param delay: packet delay
         @param outcome: -1 or 1 (read below)
         """
-
-
 
         if id_event in self.taken_actions:
             array = self.taken_actions[id_event]
@@ -73,18 +71,22 @@ class QLearningRouting(BASE_routing):
         state = int(cell_index)
         action = None
 
-
         chosen = self.egreedy(opt_neighbors, state)
         if (chosen == None):
             id = self.drone.identifier
         else:
             id = chosen.identifier
 
+        if (util.euclidean_distance(self.drone.next_target(), self.drone.depot.coords) < 100):
+            chosen = None
+            id = self.drone.identifier
+
         if (packet.event_ref.identifier in self.taken_actions):            #if I've done the same action with the same packet
             self.taken_actions[packet.event_ref.identifier].append((state, int(id)))
         else:
             self.taken_actions[packet.event_ref.identifier] = [(state, int(id))]
-        #print()
+
+
         return chosen
 
     def egreedy(self, opt_neighbors, state):
