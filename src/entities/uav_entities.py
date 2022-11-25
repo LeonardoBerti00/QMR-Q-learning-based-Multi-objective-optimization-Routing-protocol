@@ -231,6 +231,7 @@ class Drone(Entity):
 
         super().__init__(identifier, path[0], simulator)
 
+
         self.depot = depot
         self.path = path
         self.speed = self.simulator.drone_speed
