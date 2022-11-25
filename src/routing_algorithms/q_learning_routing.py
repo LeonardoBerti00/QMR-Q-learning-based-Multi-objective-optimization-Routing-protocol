@@ -9,7 +9,6 @@ import numpy as np
 
 class QLearningRouting(BASE_routing):
 
-
     def __init__(self, drone, simulator):
         BASE_routing.__init__(self, drone, simulator)
         self.taken_actions = {}  # id event : (old_state, old_action)
@@ -19,6 +18,7 @@ class QLearningRouting(BASE_routing):
         self.l = 0.1
         self.eps = 20
         self.div = 50
+        self.dist = 100
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -52,7 +52,11 @@ class QLearningRouting(BASE_routing):
 
     def computeReward(self, id_event, outcome, delay, state, action):
         reward = outcome
-        return reward * (delay/self.div)
+        if (reward == 1):
+            return reward * (1/ (delay/self.div))
+        else:
+            return reward * (delay / self.div)
+
 
 
     def relay_selection(self, opt_neighbors: list, packet):
@@ -77,7 +81,8 @@ class QLearningRouting(BASE_routing):
         else:
             id = chosen.identifier
 
-        if (util.euclidean_distance(self.drone.next_target(), self.drone.depot.coords) < 100):
+
+        if (util.euclidean_distance(self.drone.next_target(), self.drone.depot.coords) < self.dist):
             chosen = None
             id = self.drone.identifier
 
