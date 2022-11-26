@@ -46,7 +46,12 @@ class QLearningRouting(BASE_routing):
 
             for i in range(len(array)):
                 state, action = array[i]
+                print(outcome)
+                print(delay)
+                print(self.computeReward2(outcome, delay))
                 reward = self.computeReward(outcome, delay)
+                print(reward)
+                print("")
                 self.Q[int(self.drone.identifier),state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),max_state, max_action] - self.Q[int(self.drone.identifier),state, action])
 
             del self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
@@ -57,16 +62,15 @@ class QLearningRouting(BASE_routing):
     def computeReward(self, outcome, delay):
         reward = outcome
         if (reward == 1):
-            return reward * (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
+            return reward * (1 / (delay/1000))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
-            #print(delay)
             return self.negReward
 
     def computeReward2(self, outcome, delay):
         if outcome == 1:
-            reward = 2 + 2 * np.log(2000 - delay)
+            return 2 + 2 * np.log(2000 - delay)
         else:
-            reward = -2 + -2 * np.log(2000 - delay)
+            return self.negReward
 
     def relay_selection(self, opt_neighbors: list, packet):
         """
