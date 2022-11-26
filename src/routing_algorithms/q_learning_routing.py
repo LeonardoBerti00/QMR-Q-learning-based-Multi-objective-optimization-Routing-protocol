@@ -1,4 +1,3 @@
-import math
 import random
 
 from src.routing_algorithms.BASE_routing import BASE_routing
@@ -16,11 +15,10 @@ class QLearningRouting(BASE_routing):
         self.taken_actions = {}
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = 0.1
-        self.l = 0.5
+        self.l = 0.1
         self.eps = 20
         self.div = 50
         self.dist = 100
-
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -32,9 +30,20 @@ class QLearningRouting(BASE_routing):
         @param outcome: -1 or 1 (read below)
         """
 
+        #-------------------------------------------------------------------------------------------#
+        next_cell_index = util.TraversedCells.coord_to_cell(size_cell=simulator.prob_size_cell,
+                                                            width_area=self.simulator.env_width,
+                                                            x_pos=self.drone.next_target()[0],
+                                                            y_pos=self.drone.next_target()[1])[0]
+
+        #-------------------
+        #self.q_table = Dict[int, List[int]] = {}  (init)
+        #
+        #self.q_table[cell_index][action] = self.a*(reward + self.l*(max(self.q_table[next_cell_index]))-self.q_table[cell_index][action])
+        #-------------------
 
 
-        if str(id_event) + str(int(self.drone.identifier))  in self.taken_actions:
+        if str(id_event) +str(int(self.drone.identifier))  in self.taken_actions:
             array = self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
             maxx = -1111111111
             for i in range(self.Q.shape[1]):          #select the best Q[s, a]
