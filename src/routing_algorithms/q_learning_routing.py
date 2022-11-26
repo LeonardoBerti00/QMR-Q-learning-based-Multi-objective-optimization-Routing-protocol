@@ -19,6 +19,7 @@ class QLearningRouting(BASE_routing):
         self.eps = 20
         self.div = 50
         self.dist = 100
+        self.negReward = -10        #setting the hyperparameters for the negative reqard
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -31,19 +32,9 @@ class QLearningRouting(BASE_routing):
         """
 
         #-------------------------------------------------------------------------------------------#
-        next_cell_index = util.TraversedCells.coord_to_cell(size_cell=simulator.prob_size_cell,
-                                                            width_area=self.simulator.env_width,
-                                                            x_pos=self.drone.next_target()[0],
-                                                            y_pos=self.drone.next_target()[1])[0]
-
-        #-------------------
-        #self.q_table = Dict[int, List[int]] = {}  (init)
-        #
-        #self.q_table[cell_index][action] = self.a*(reward + self.l*(max(self.q_table[next_cell_index]))-self.q_table[cell_index][action])
-        #-------------------
 
 
-        if str(id_event) +str(int(self.drone.identifier))  in self.taken_actions:
+        if str(id_event) + str(int(self.drone.identifier))  in self.taken_actions:
             array = self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
             maxx = -1111111111
             for i in range(self.Q.shape[1]):          #select the best Q[s, a]
@@ -55,7 +46,7 @@ class QLearningRouting(BASE_routing):
 
             for i in range(len(array)):
                 state, action = array[i]
-                reward = self.computeReward(id_event, outcome, delay, state, action)
+                reward = self.computeReward(outcome, delay)
                 self.Q[int(self.drone.identifier),state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),max_state, max_action] - self.Q[int(self.drone.identifier),state, action])
 
             del self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
@@ -63,14 +54,19 @@ class QLearningRouting(BASE_routing):
         # Be aware, due to network errors we can give the same event to multiple drones and receive multiple
         # feedback for the same packet!!
 
-    def computeReward(self, id_event, outcome, delay, state, action):
+    def computeReward(self, outcome, delay):
         reward = outcome
         if (reward == 1):
-            return reward * (1/ (delay/self.div))
+            return reward * (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
-            return reward * (delay / self.div)
+            #print(delay)
+            return self.negReward
 
-
+    def computeReward2(self, outcome, delay):
+        if outcome == 1:
+            reward = 2 + 2 * np.log(2000 - delay)
+        else:
+            reward = -2 + -2 * np.log(2000 - delay)
 
     def relay_selection(self, opt_neighbors: list, packet):
         """
@@ -94,16 +90,10 @@ class QLearningRouting(BASE_routing):
         else:
             id = chosen.identifier
 
-
-        if (util.euclidean_distance(self.drone.next_target(), self.drone.depot.coords) < self.dist):
-            chosen = None
-            id = self.drone.identifier
-
-        if (packet.event_ref.identifier in self.taken_actions):            #if I've done the same action with the same packet
-            self.taken_actions[packet.event_ref.identifier].append((state, int(id)))
+        if (str(packet.event_ref.identifier) + str(int(self.drone.identifier)) in self.taken_actions):            #if I've done the same action with the same packet
+            self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))].append((state, int(id)))
         else:
-            self.taken_actions[packet.event_ref.identifier] = [(state, int(id))]
-
+            self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))] = [(state, int(id))]
 
         return chosen
 
