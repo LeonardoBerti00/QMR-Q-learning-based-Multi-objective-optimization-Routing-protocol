@@ -16,9 +16,9 @@ class QLearningRouting(BASE_routing):
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = 0.1
         self.l = 0.1
-        self.eps = 20
+        self.eps = 30
         self.div = 50
-        self.dist = 100
+        self.negReward = -5       #setting the hyperparameters for the negative reqard
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -30,20 +30,29 @@ class QLearningRouting(BASE_routing):
         @param outcome: -1 or 1 (read below)
         """
 
-        if str(id_event) +str(int(self.drone.identifier))  in self.taken_actions:
+        #-------------------------------------------------------------------------------------------#
+
+
+        if str(id_event) + str(int(self.drone.identifier))  in self.taken_actions:
             array = self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
             maxx = -1111111111
             #for i in range(self.Q.shape[1]):          #select the best Q[s, a]
-            
+
 
             for i in range(len(array)):
                 state, action, next_state = array[i]
+
+                # select best action
                 for j in range(self.Q.shape[2]):
-                    if (self.Q[int(self.drone.identifier),i, j] > maxx):
+                    #print(int(self.drone.identifier), next_state, j)
+                    if (self.Q[int(self.drone.identifier), next_state, j] > maxx):
                         max_action = j
-                        #max_state = i
-                        maxx = self.Q[int(self.drone.identifier),i, j]
-                reward = self.computeReward(id_event, outcome, delay, state, action)
+                        maxx = self.Q[int(self.drone.identifier), next_state, j]
+
+                #Compute the reward
+                reward = self.computeReward(outcome, delay)
+
+                #Update Q table
                 self.Q[int(self.drone.identifier),state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),next_state, max_action] - self.Q[int(self.drone.identifier),state, action])
 
             del self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
@@ -51,14 +60,18 @@ class QLearningRouting(BASE_routing):
         # Be aware, due to network errors we can give the same event to multiple drones and receive multiple
         # feedback for the same packet!!
 
-    def computeReward(self, id_event, outcome, delay, state, action):
+    def computeReward(self, outcome, delay):
         reward = outcome
         if (reward == 1):
-            return reward * (1/ (delay/self.div))
+            return 1 + reward * (1 / (delay/1200))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
-            return reward * (delay / self.div)
+            return self.negReward
 
-
+    def computeReward2(self, outcome, delay):
+        if outcome == 1:
+            return 1 + 1.5 * np.log(2000 - delay)
+        else:
+            return self.negReward
 
     def relay_selection(self, opt_neighbors: list, packet):
         """
@@ -72,13 +85,14 @@ class QLearningRouting(BASE_routing):
                                                         width_area=self.simulator.env_width,
                                                         x_pos=self.drone.coords[0],  # e.g. 1500
                                                         y_pos=self.drone.coords[1])[0]  # e.g. 500
+
         state = int(cell_index)
 
 
-        next_cell_index = util.TraversedCells.coord_to_cell(size_cell=simulator.prob_size_cell,
+        next_cell_index = util.TraversedCells.coord_to_cell(size_cell=self.simulator.prob_size_cell,
                                                             width_area=self.simulator.env_width,
                                                             x_pos=self.drone.next_target()[0],
-                                                            y_pos=self.drone.next_target()[1])[0]0
+                                                            y_pos=self.drone.next_target()[1])[0]
 
         next_state = int(next_cell_index)
 
@@ -88,16 +102,10 @@ class QLearningRouting(BASE_routing):
         else:
             id = chosen.identifier
 
-
-        if (util.euclidean_distance(self.drone.next_target(), self.drone.depot.coords) < self.dist):
-            chosen = None
-            id = self.drone.identifier
-
-        if (packet.event_ref.identifier in self.taken_actions):            #if I've done the same action with the same packet
-            self.taken_actions[packet.event_ref.identifier].append((state, int(id)))
+        if (str(packet.event_ref.identifier) + str(int(self.drone.identifier)) in self.taken_actions):            #if I've done the same action with the same packet
+            self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))].append((state, int(id), next_state))
         else:
-            self.taken_actions[packet.event_ref.identifier] = [(state, int(id))]
-
+            self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))] = [(state, int(id), next_state)]
 
         return chosen
 
