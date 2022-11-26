@@ -14,10 +14,10 @@ class QLearningRouting(BASE_routing):
         self.Q = np.ones((int(self.simulator.n_drones), 16, int(self.simulator.n_drones)))
         self.taken_actions = {}
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
-        self.a = 0.1
-        self.l = 0.1
-        self.eps = 30
-        self.div = 50
+        self.a = simulator.alpha
+        self.l = simulator.gamma
+        self.eps = simulator.epsilon
+        self.div = simulator.div
         self.negReward = -5       #setting the hyperparameters for the negative reqard
 
     def feedback(self, drone, id_event, delay, outcome):
@@ -63,7 +63,7 @@ class QLearningRouting(BASE_routing):
     def computeReward(self, outcome, delay):
         reward = outcome
         if (reward == 1):
-            return 1 + reward * (1 / (delay/1200))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
+            return 1 + reward * (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
             return self.negReward
 
