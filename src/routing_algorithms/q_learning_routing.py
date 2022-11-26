@@ -36,6 +36,12 @@ class QLearningRouting(BASE_routing):
                                                             x_pos=self.drone.next_target()[0],
                                                             y_pos=self.drone.next_target()[1])[0]
 
+        #-------------------
+        #self.q_table = Dict[int, List[int]] = {}  (init)
+        #
+        #self.q_table[cell_index][action] = self.a*(reward + self.l*(max(self.q_table[next_cell_index]))-self.q_table[cell_index][action])
+        #-------------------
+
 
         if str(id_event) +str(int(self.drone.identifier))  in self.taken_actions:
             array = self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
