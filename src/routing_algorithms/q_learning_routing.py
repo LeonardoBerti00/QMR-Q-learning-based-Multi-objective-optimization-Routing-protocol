@@ -30,6 +30,13 @@ class QLearningRouting(BASE_routing):
         @param outcome: -1 or 1 (read below)
         """
 
+        #-------------------------------------------------------------------------------------------#
+        next_cell_index = util.TraversedCells.coord_to_cell(size_cell=simulator.prob_size_cell,
+                                                            width_area=self.simulator.env_width,
+                                                            x_pos=self.drone.next_target()[0],
+                                                            y_pos=self.drone.next_target()[1])[0]
+
+
         if str(id_event) +str(int(self.drone.identifier))  in self.taken_actions:
             array = self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
             maxx = -1111111111
