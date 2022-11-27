@@ -46,7 +46,7 @@ class QLearningRouting(BASE_routing):
                         maxx = self.Q[int(self.drone.identifier), next_state, j]
 
                 #Compute the reward
-                reward = self.computeReward(outcome, delay)
+                reward = self.computeReward2(outcome, delay)
 
                 #Update Q table
                 self.Q[int(self.drone.identifier),state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),next_state, max_action] - self.Q[int(self.drone.identifier),state, action])
