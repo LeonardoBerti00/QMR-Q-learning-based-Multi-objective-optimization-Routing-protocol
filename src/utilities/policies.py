@@ -19,3 +19,13 @@ class Optimistic:
 
     def add(self, optimisitc_value):
         self.optimistic_value = optimisitc_value
+
+class UCB:
+    def __init__(self, c=0):
+        self.c = c
+
+    def value(self):
+        return self.c
+
+    def add(self, c):
+        self.c = c

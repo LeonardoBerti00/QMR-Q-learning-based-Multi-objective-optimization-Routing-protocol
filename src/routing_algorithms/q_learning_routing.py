@@ -3,15 +3,15 @@ from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
 from src.utilities.policies import *
 import numpy as np
-
+import math
 
 class QLearningRouting(BASE_routing):
 
     def __init__(self, drone, simulator):
         BASE_routing.__init__(self, drone, simulator)
-        self.Q = np.ones((int(self.simulator.n_drones), 16, int(self.simulator.n_drones)))
+        self.Q = np.zeros((int(self.simulator.n_drones), 16, int(self.simulator.n_drones)))
         self.taken_actions = {}
-        self.ucb_actions = {}  #dict for ucb function, instead of taken actions, we don't remove elements from it
+        self.ucb_actions = np.zeros((int(self.simulator.n_drones), int(self.simulator.n_drones)))  #dict for ucb function, instead of taken actions, we don't remove elements from it
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = simulator.alpha
         self.l = simulator.gamma
@@ -50,7 +50,7 @@ class QLearningRouting(BASE_routing):
                 reward = self.computeReward2(outcome, delay)
 
                 #Update Q table
-                self.Q[int(self.drone.identifier),state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),next_state, max_action] - self.Q[int(self.drone.identifier),state, action])
+                self.Q[int(self.drone.identifier), state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),next_state, max_action] - self.Q[int(self.drone.identifier),state, action])
 
             #update taken actions
             del self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
@@ -75,7 +75,7 @@ class QLearningRouting(BASE_routing):
         @param opt_neighbors: a list of tuple (hello_packet, source_drone)
         @return: The best drone to use as relay
         """
-
+        #print(self.drone.identifier)
         cell_index = util.TraversedCells.coord_to_cell(size_cell=self.simulator.prob_size_cell,
                                                         width_area=self.simulator.env_width,
                                                         x_pos=self.drone.coords[0],  # e.g. 1500
@@ -92,47 +92,54 @@ class QLearningRouting(BASE_routing):
         next_state = int(next_cell_index)
         chosen = None
 
+        #Select the policy function
         if isinstance(self.policy, Epsilon):
             self.eps = self.policy.epsilon
             chosen = self.egreedy(opt_neighbors, state)
+
         elif isinstance(self.policy, Optimistic):
             self.optimistic_value = self.policy.optimistic_value
             chosen = self.optimistic(opt_neighbors, state)
 
+        elif isinstance(self.policy, UCB):
+            self.c = self.policy.c
+            chosen = self.UCB(opt_neighbors, state)
+
+
+        #Select the id of the chosen drone
         if (chosen == None):
             id = self.drone.identifier
         else:
             id = chosen.identifier
 
+
+        #Update taken actions
         if (str(packet.event_ref.identifier) + str(int(self.drone.identifier)) in self.taken_actions):            #if I've done the same action with the same packet
             self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))].append((state, int(id), next_state))
         else:
             self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))] = [(state, int(id), next_state)]
             
 
-        #ucb actions    
-        if (packet.event_ref.identifier in self.actions):
-            self.ucb_actions[packet.event_ref.identifier].append((state, int(id)))
-        else:
-            self.ucb_actions[packet.event_ref.identifier] = ((state, int(id)))
+        #update ucb actions
+        if isinstance(self.policy, UCB):
+            self.ucb_actions[int(self.drone.identifier), int(id)] += 1
 
         return chosen
 
-    def ucb(self,opt_neighbors, state):
+    def UCB(self,opt_neighbors, state):
         max_a = -10000
-        for i in range(len(opt_neighbors)): 
-            for j in range(self.Q.shape[1]): 
-                id = int(opt_neighbors[i][1].identifier)
-                    if (self.Q[int(self.drone.identifier), state, id] > max_a):
-                        max_a = self.Q[int(self.drone.identifier), state, id]
-                    c = random.randint(1,100) #check grade of exploration
-                    t = simulator.cur_step    #current timestep
-                    for a in actions:
-                        if a == id:           
-                            nt_a=ucb_actions[a]   # #of times that action has been called
+        c = self.policy.c
+        for i in range(len(opt_neighbors)):
+            drone = opt_neighbors[i][1]
+            Q_t = self.Q[int(self.drone.identifier), state, drone.identifier]
+            t = self.simulator.cur_step   #current timestep
+            nt_a = self.ucb_actions[int(self.drone.identifier), drone.identifier]
+            exploration_value = (c*math.sqrt((math.log(t)/(nt_a+0.01))))
 
-        a_t = max(qt_a + (c*sqrt((ln(t)/nt_a)))) #ucb formula
-        return a_t
+            if (Q_t + exploration_value > max_a):
+                max_a = Q_t + exploration_value
+                chosen = drone
+        return chosen
 
 
     def optimistic(self, opt_neighbors, state):
@@ -154,7 +161,6 @@ class QLearningRouting(BASE_routing):
 
         if (self.Q[int(self.drone.identifier), state, int(self.drone.identifier)] > maxx):
             chosen = None
-
 
         return chosen
 
