@@ -1,7 +1,7 @@
 import random
 from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
-from src.simulation.simulator import Simulator
+from src.utilities.policies import *
 import numpy as np
 
 
@@ -14,9 +14,12 @@ class QLearningRouting(BASE_routing):
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = simulator.alpha
         self.l = simulator.gamma
-        self.eps = simulator.epsilon
         self.div = simulator.div
-        self.policy = self.simulator.policy
+
+        self.eps = 0
+        self.optimistic_value = 0
+
+        self.policy = simulator.policy
         self.negReward = -5       #setting the hyperparameters for the negative reqard
 
     def feedback(self, drone, id_event, delay, outcome):
@@ -88,14 +91,13 @@ class QLearningRouting(BASE_routing):
         next_state = int(next_cell_index)
         chosen = None
 
-        if self.policy == Simulator.Policy.EPSILON:
+        if isinstance(self.policy, Epsilon):
+            self.eps = self.policy.epsilon
             chosen = self.egreedy(opt_neighbors, state)
-        elif self.policy == Simulator.Policy.OPTIMISTIC:
+        elif isinstance(self.policy, Optimistic):
+            self.optimistic_value = self.policy.optimistic_value
             chosen = self.optimistic(opt_neighbors, state)
-        elif self.policy == Simulator.Policy.UCB:
-            chosen = self.ucb(opt_neighbors, state)
 
-        chosen = self.egreedy(opt_neighbors, state)
         if (chosen == None):
             id = self.drone.identifier
         else:
@@ -111,7 +113,27 @@ class QLearningRouting(BASE_routing):
     def ucb(self, opt_neighbors, state):
         return None
     def optimistic(self, opt_neighbors, state):
-        return None
+
+        # Riempire tabelle con initial value (2)
+        for drone_id in range(self.simulator.n_drones):
+            for cell in range(self.num_cells):
+                for drone_action in range(self.simulator.n_drones):
+                    self.Q[drone_id, cell, drone_action] = self.optimistic_value
+
+        # Prendere il max
+        maxx = -1000000
+        chosen = None
+        for i in range(len(opt_neighbors)):
+            id = int(opt_neighbors[i][1].identifier)
+            if (self.Q[int(self.drone.identifier), state, id] > maxx):
+                chosen = opt_neighbors[i][1]
+                maxx = self.Q[int(self.drone.identifier), state, id]
+
+        if (self.Q[int(self.drone.identifier), state, int(self.drone.identifier)] > maxx):
+            chosen = None
+
+
+        return chosen
 
     def egreedy(self, opt_neighbors, state):
         r = random.randint(1, 100)

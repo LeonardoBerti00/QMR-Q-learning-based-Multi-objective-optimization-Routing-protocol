@@ -1,6 +1,6 @@
 import numpy as np
 from src.simulation.simulator import Simulator
-
+from src.utilities.policies import *
 
 def main():
     """ the place where to run simulations and experiments. """
@@ -62,7 +62,17 @@ def main():
 
 
 
+    for drone in range(5, 30, 5):
+        for alpha in alphas:
+            for gamma in gammas:
+                for epsilon in epsilons:
+                    for div in divs:
+                        sim = Simulator(drone, alpha, gamma, epsilon, div)
+                        sim.run()
+                        results.append((drone, alpha, gamma, epsilon, div, len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation))
+                        sim.close()
 
+    np.save("Risultati", np.array(results))
 
 
 '''

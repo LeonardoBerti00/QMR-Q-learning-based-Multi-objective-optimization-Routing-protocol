@@ -21,15 +21,9 @@ you can initialize the Simulator with non default values.
 
 class Simulator:
 
-    class Policy(Enum):
-        EPSILON=1
-        OPTIMISTIC=2
-        UCB=3
-
     def __init__(self, n_drones,
                  alpha,
                  gamma,
-                 epsilon,
                  div,
                  policy,
                  len_simulation=15000,
@@ -109,7 +103,6 @@ class Simulator:
         # TODO: Remove me
         self.alpha = alpha
         self.gamma = gamma
-        self.epsilon = epsilon
         self.div = div
         self.policy = policy
 
