@@ -235,7 +235,7 @@ class Simulator:
         @return: None
         """
 
-        for cur_step in tqdm(range(self.len_simulation)):
+        for cur_step in range(self.len_simulation): #tqdm(range(self.len_simulation)):
             
             self.cur_step = cur_step
             # check for new events and remove the expired ones from the environment

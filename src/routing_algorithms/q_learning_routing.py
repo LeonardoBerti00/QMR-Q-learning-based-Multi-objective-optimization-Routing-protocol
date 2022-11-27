@@ -1,10 +1,7 @@
 import random
-
 from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
 import numpy as np
-
-
 
 
 class QLearningRouting(BASE_routing):
@@ -30,21 +27,15 @@ class QLearningRouting(BASE_routing):
         @param outcome: -1 or 1 (read below)
         """
 
-        #-------------------------------------------------------------------------------------------#
-
-
         if str(id_event) + str(int(self.drone.identifier))  in self.taken_actions:
             array = self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
             maxx = -1111111111
-            #for i in range(self.Q.shape[1]):          #select the best Q[s, a]
-
 
             for i in range(len(array)):
                 state, action, next_state = array[i]
 
                 # select best action
                 for j in range(self.Q.shape[2]):
-                    #print(int(self.drone.identifier), next_state, j)
                     if (self.Q[int(self.drone.identifier), next_state, j] > maxx):
                         max_action = j
                         maxx = self.Q[int(self.drone.identifier), next_state, j]
@@ -55,10 +46,8 @@ class QLearningRouting(BASE_routing):
                 #Update Q table
                 self.Q[int(self.drone.identifier),state, action] = self.Q[int(self.drone.identifier),state, action] + self.a * (reward + self.l * self.Q[int(self.drone.identifier),next_state, max_action] - self.Q[int(self.drone.identifier),state, action])
 
+            #update taken actions
             del self.taken_actions[str(id_event) + str(int(self.drone.identifier))]
-
-        # Be aware, due to network errors we can give the same event to multiple drones and receive multiple
-        # feedback for the same packet!!
 
     def computeReward(self, outcome, delay):
         reward = outcome
@@ -67,7 +56,7 @@ class QLearningRouting(BASE_routing):
         else:
             return self.negReward
 
-    def computeReward2(self, outcome, delay):
+    def computeReward2(self, outcome, delay):                         #un altro possibile metodo di rewarding
         if outcome == 1:
             return 1 + 1.5 * np.log(2000 - delay)
         else:
@@ -128,3 +117,4 @@ class QLearningRouting(BASE_routing):
             else:
                 chosen = opt_neighbors[r][1]
         return chosen
+
