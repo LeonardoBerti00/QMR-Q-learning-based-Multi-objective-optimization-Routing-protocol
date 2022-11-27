@@ -11,6 +11,7 @@ class QLearningRouting(BASE_routing):
         BASE_routing.__init__(self, drone, simulator)
         self.Q = np.ones((int(self.simulator.n_drones), 16, int(self.simulator.n_drones)))
         self.taken_actions = {}
+        self.ucb_actions = {}  #dict for ucb function, instead of taken actions, we don't remove elements from it
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = simulator.alpha
         self.l = simulator.gamma
@@ -107,11 +108,33 @@ class QLearningRouting(BASE_routing):
             self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))].append((state, int(id), next_state))
         else:
             self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))] = [(state, int(id), next_state)]
+            
+
+        #ucb actions    
+        if (packet.event_ref.identifier in self.actions):
+            self.ucb_actions[packet.event_ref.identifier].append((state, int(id)))
+        else:
+            self.ucb_actions[packet.event_ref.identifier] = ((state, int(id)))
 
         return chosen
 
-    def ucb(self, opt_neighbors, state):
-        return None
+    def ucb(self,opt_neighbors, state):
+        max_a = -10000
+        for i in range(len(opt_neighbors)): 
+            for j in range(self.Q.shape[1]): 
+                id = int(opt_neighbors[i][1].identifier)
+                    if (self.Q[int(self.drone.identifier), state, id] > max_a):
+                        max_a = self.Q[int(self.drone.identifier), state, id]
+                    c = random.randint(1,100) #check grade of exploration
+                    t = simulator.cur_step    #current timestep
+                    for a in actions:
+                        if a == id:           
+                            nt_a=ucb_actions[a]   # #of times that action has been called
+
+        a_t = max(qt_a + (c*sqrt((ln(t)/nt_a)))) #ucb formula
+        return a_t
+
+
     def optimistic(self, opt_neighbors, state):
 
         # Riempire tabelle con initial value (2)
