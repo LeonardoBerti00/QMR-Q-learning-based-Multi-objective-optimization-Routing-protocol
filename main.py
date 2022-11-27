@@ -10,18 +10,8 @@ def main():
     alphas = [0.1, 0.2, 0.05, 0.01, 0.15]
     gammas = [0.1, 0.2, 0.05, 0.01, 0.5]
     epsilons = [15, 20, 25, 30]
+    values = [0.1, 0.2, 0.5, 1, 2, 3]
     divs = [1000, 1200]
-    results = []
-
-    for drone in range(5, 30, 5):
-        for alpha in alphas:
-            for gamma in gammas:
-                for epsilon in epsilons:
-                    for div in divs:
-                        sim = Simulator(drone, alpha, gamma, epsilon, div)
-                        sim.run()
-                        results.append((drone, alpha, gamma, epsilon, div, len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation))
-                        sim.close()
 
     np.save("Risultati", np.array(results))
 
@@ -60,27 +50,30 @@ def main():
     result = np.flip(result, 0)
     print(result[:10])
 
-
-
-    for drone in range(5, 30, 5):
-        for alpha in alphas:
-            for gamma in gammas:
-                for epsilon in epsilons:
-                    for div in divs:
-                        sim = Simulator(drone, alpha, gamma, epsilon, div)
-                        sim.run()
-                        results.append((drone, alpha, gamma, epsilon, div, len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation))
-                        sim.close()
-
     np.save("Risultati", np.array(results))
 
 
-'''
-    sim = Simulator(5, 0.1, 0.1, 20, 50)  # empty constructor means that all the parameters of the simulation are taken from src.utilities.config.py
-    sim.run()  # run the simulation
-    print(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
-    sim.close()
-'''
+results = []
+
+
+def grid_search(drones, alphas, gammas, divs, policy):
+    for drone in range(5, 30, 5):
+        for alpha in alphas:
+            for gamma in gammas:
+                for div in divs:
+                    sim = Simulator(drone, alpha, gamma, div, policy)
+                    sim.run()
+                    results.append((drone, alpha, gamma, div, policy, len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation))
+                    sim.close()
+
+
+def egreedy_grid_search(drones, alphas, gammas, divs, epsilons):
+    for epsilon in epsilons:
+        grid_search(drones, alphas, gammas, divs, Epsilon(epsilon))
+
+def optimistic_grid_search(drones, alphas, gammas, divs, values):
+    for value in values:
+        grid_search(drones, alphas, gammas, divs, Optimistic(value))
 
 if __name__ == "__main__":
     main()
