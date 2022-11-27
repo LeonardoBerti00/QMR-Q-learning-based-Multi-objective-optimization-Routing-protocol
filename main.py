@@ -5,12 +5,6 @@ from src.simulation.simulator import Simulator
 def main():
     """ the place where to run simulations and experiments. """
 
-    # a
-    # l
-    # eps
-    # div
-    # dist
-
     alphas = [0.1, 0.2, 0.05, 0.01, 0.15]
     gammas = [0.1, 0.2, 0.05, 0.01, 0.5]
     epsilons = [15, 20, 25, 30]
@@ -22,7 +16,7 @@ def main():
             for gamma in gammas:
                 for epsilon in epsilons:
                     for div in divs:
-                        sim = Simulator(drone, alpha, gamma, epsilon, div)
+                        sim = Simulator(drone, alpha, gamma, epsilon, div, Simulator.Policy.EPSILON)
                         sim.run()
                         results.append((drone, alpha, gamma, epsilon, div, len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation))
                         sim.close()
