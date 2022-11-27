@@ -1,6 +1,7 @@
 import random
 from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
+from src.simulation.simulator import Simulator
 import numpy as np
 
 
@@ -15,6 +16,7 @@ class QLearningRouting(BASE_routing):
         self.l = simulator.gamma
         self.eps = simulator.epsilon
         self.div = simulator.div
+        self.policy = self.simulator.policy
         self.negReward = -5       #setting the hyperparameters for the negative reqard
 
     def feedback(self, drone, id_event, delay, outcome):
@@ -84,6 +86,14 @@ class QLearningRouting(BASE_routing):
                                                             y_pos=self.drone.next_target()[1])[0]
 
         next_state = int(next_cell_index)
+        chosen = None
+
+        if self.policy == Simulator.Policy.EPSILON:
+            chosen = self.egreedy(opt_neighbors, state)
+        elif self.policy == Simulator.Policy.OPTIMISTIC:
+            chosen = self.optimistic(opt_neighbors, state)
+        elif self.policy == Simulator.Policy.UCB:
+            chosen = self.ucb(opt_neighbors, state)
 
         chosen = self.egreedy(opt_neighbors, state)
         if (chosen == None):
@@ -97,6 +107,11 @@ class QLearningRouting(BASE_routing):
             self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))] = [(state, int(id), next_state)]
 
         return chosen
+
+    def ucb(self, opt_neighbors, state):
+        return None
+    def optimistic(self, opt_neighbors, state):
+        return None
 
     def egreedy(self, opt_neighbors, state):
         r = random.randint(1, 100)

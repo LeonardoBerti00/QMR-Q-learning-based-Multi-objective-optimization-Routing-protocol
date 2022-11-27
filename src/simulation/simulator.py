@@ -1,3 +1,5 @@
+from enum import Enum
+
 from src.drawing import pp_draw
 from src.entities.uav_entities import *
 from src.simulation.metrics import Metrics
@@ -19,13 +21,17 @@ you can initialize the Simulator with non default values.
 
 class Simulator:
 
-    # TODO: Remove this.
-    # OUR CHANGED CONSTRUCTOR
+    class Policy(Enum):
+        EPSILON=1
+        OPTIMISTIC=2
+        UCB=3
+
     def __init__(self, n_drones,
                  alpha,
                  gamma,
                  epsilon,
                  div,
+                 policy,
                  len_simulation=15000,
                  time_step_duration=config.TS_DURATION,
                  seed=config.SEED,
@@ -105,6 +111,7 @@ class Simulator:
         self.gamma = gamma
         self.epsilon = epsilon
         self.div = div
+        self.policy = policy
 
         # --------------- cell for drones -------------
         self.prob_size_cell_r = prob_size_cell_r
