@@ -5,6 +5,9 @@ from src.utilities.policies import *
 def main():
     """ the place where to run simulations and experiments. """
 
+    sim = Simulator(5, 0.5, 0.5, 1000, UCB(20))
+    sim.run()
+    sim.close()
 
 '''
     drones = range(5,35,5)

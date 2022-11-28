@@ -23,6 +23,13 @@ class QLearningRouting(BASE_routing):
         self.policy = simulator.policy
         self.negReward = -5       #setting the hyperparameters for the negative reqard
 
+        # Riempire tabelle con initial value (2)
+        if isinstance(self.policy, Optimistic):
+            for drone_id in range(self.simulator.n_drones):
+                for cell in range(self.num_cells):
+                    for drone_action in range(self.simulator.n_drones):
+                        self.Q[drone_id, cell, drone_action] = self.optimistic_value
+
     def feedback(self, drone, id_event, delay, outcome):
         """
         Feedback returned when the packet arrives at the depot or
@@ -143,13 +150,6 @@ class QLearningRouting(BASE_routing):
 
 
     def optimistic(self, opt_neighbors, state):
-
-        # Riempire tabelle con initial value (2)
-        for drone_id in range(self.simulator.n_drones):
-            for cell in range(self.num_cells):
-                for drone_action in range(self.simulator.n_drones):
-                    self.Q[drone_id, cell, drone_action] = self.optimistic_value
-
         # Prendere il max
         maxx = -1000000
         chosen = None
