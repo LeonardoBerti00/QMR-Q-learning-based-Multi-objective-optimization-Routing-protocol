@@ -125,7 +125,6 @@ class Metrics:
         self.event_mean_delivery_time = np.mean(event_delivery_times) * self.simulator.time_step_duration
 
     def print_overall_stats(self):
-        return
         """
         print the overall stats of the alg execution
         @return:

@@ -19,12 +19,10 @@ class QLearningRouting(BASE_routing):
         self.div = simulator.div
         self.negReward = simulator.negReward       #setting the hyperparameters for the negative reqard
         self.eps = 0
-        self.cont = 0
         self.optimistic_value = 0
+        self.c = 0
 
         self.policy = simulator.policy
-        self.past_optNeig = []                                      #we saved the past opt_neighbours
-        self.pastNeig = np.zeros((int(self.simulator.n_drones)))  # we saved the id of the past neighbours
 
         if isinstance(self.policy, UCB):
             self.ucb_actions = np.zeros((int(self.simulator.n_drones)))  # dict for ucb function, instead of taken actions, we don't remove elements from it
@@ -107,40 +105,7 @@ class QLearningRouting(BASE_routing):
 
         next_state = int(next_cell_index)
         chosen = None
-        '''
-        MF = 0
-        #group the actual neighbours
-        neighbours = np.zeros((self.simulator.n_drones))
-        for neig in opt_neighbors:
-            drone_id = neig[1].identifier
-            neighbours[drone_id] = 1
 
-        #Compute MF if there are new hello packet
-        if (self.past_optNeig != opt_neighbors):
-            first = 0
-            second = 0
-            for i in range(self.simulator.n_drones):
-                if (neighbours[i] != self.pastNeig[i]):
-                    first += 1
-                if (neighbours[i] != self.pastNeig[i] or neighbours[i] == 1 == self.pastNeig[i]):
-                    second += 1
-            MF = math.sqrt(1 - (first / second))
-
-        #Compute new encounters
-        new_encounters = 0
-        for i in range(self.simulator.n_drones):
-            if (self.pastNeig[i] == 0 and neighbours[i] == 1):
-                new_encounters += 1
-
-        #Compute Neighbor node’s Average Encounter Rate (AER)
-        AER = new_encounters / self.simulator.drone_retransmission_delta
-        ymax = new_encounters / (self.simulator.n_drones - 1)
-        AER = AER * ymax
-
-        #Compute the state and the immediate cost
-        state = (round(MF, 1), round(AER, 2))
-        cost = 0.1*MF + 10*AER
-        '''
         #Select the policy function
         if isinstance(self.policy, Epsilon):
             self.eps = self.policy.epsilon
@@ -169,6 +134,7 @@ class QLearningRouting(BASE_routing):
             self.taken_actions[str(packet.event_ref.identifier)] = [(state, int(id), next_state)]
 
 
+        # TODO: perche' sta cosi' in basso questo?
         #update ucb actions
         if isinstance(self.policy, UCB):
             self.ucb_actions[int(id)] += 1
@@ -199,6 +165,7 @@ class QLearningRouting(BASE_routing):
     '''
     def UCB(self,opt_neighbors, state):
         max_a = -10000
+        chosen = None
         c = self.policy.c
         for i in range(len(opt_neighbors)):
             drone = opt_neighbors[i][1]
@@ -207,20 +174,13 @@ class QLearningRouting(BASE_routing):
             nt_a = self.ucb_actions[drone.identifier]
             exploration_value = (c*math.sqrt((math.log(t)/(nt_a+0.01))))
 
-            if (Q_t + exploration_value > max_a):
+            if Q_t + exploration_value > max_a:
                 max_a = Q_t + exploration_value
                 chosen = drone
         return chosen
 
 
     def optimistic(self, opt_neighbors, state):
-
-        # Riempire tabelle con initial value (2)
-        for drone_id in range(self.simulator.n_drones):
-            for cell in range(self.num_cells):
-                for drone_action in range(self.simulator.n_drones):
-                    self.Q[cell, drone_action] = self.optimistic_value
-
         # Prendere il max
         maxx = -1000000
         chosen = None
