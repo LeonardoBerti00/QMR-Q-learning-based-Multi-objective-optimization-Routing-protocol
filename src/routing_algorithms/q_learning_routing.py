@@ -12,6 +12,7 @@ class QLearningRouting(BASE_routing):
         self.Q = np.zeros((16, int(self.simulator.n_drones)))
         #self.Q = {}
         self.taken_actions = {}
+        self.ucb_actions = np.zeros((int(self.simulator.n_drones), int(self.simulator.n_drones)))  #dict for ucb function, instead of taken actions, we don't remove elements from it
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = simulator.alpha
         self.l = simulator.gamma
@@ -20,12 +21,20 @@ class QLearningRouting(BASE_routing):
         self.eps = 0
         self.cont = 0
         self.optimistic_value = 0
+
         self.policy = simulator.policy
         self.past_optNeig = []                                      #we saved the past opt_neighbours
         self.pastNeig = np.zeros((int(self.simulator.n_drones)))  # we saved the id of the past neighbours
 
         if isinstance(self.policy, UCB):
             self.ucb_actions = np.zeros((int(self.simulator.n_drones)))  # dict for ucb function, instead of taken actions, we don't remove elements from it
+
+        # Riempire tabelle con initial value (2)
+        if isinstance(self.policy, Optimistic):
+            for drone_id in range(self.simulator.n_drones):
+                for cell in range(self.num_cells):
+                    for drone_action in range(self.simulator.n_drones):
+                        self.Q[drone_id, cell, drone_action] = self.optimistic_value
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -83,11 +92,11 @@ class QLearningRouting(BASE_routing):
         @return: The best drone to use as relay
         """
         #print(self.drone.identifier)
-
         cell_index = util.TraversedCells.coord_to_cell(size_cell=self.simulator.prob_size_cell,
                                                         width_area=self.simulator.env_width,
                                                         x_pos=self.drone.coords[0],  # e.g. 1500
                                                         y_pos=self.drone.coords[1])[0]  # e.g. 500
+
         state = int(cell_index)
 
 
@@ -144,6 +153,7 @@ class QLearningRouting(BASE_routing):
         elif isinstance(self.policy, UCB):
             self.c = self.policy.c
             chosen = self.UCB(opt_neighbors, state)
+
 
         #Select the id of the chosen drone
         if (chosen == None):

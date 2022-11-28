@@ -17,7 +17,7 @@ class GeoRouting(BASE_routing):
         @return: The best drone to use as relay or None if no relay is selected
         """
 
-        GREEDY_HEURISTIC = "NFP"
+        GREEDY_HEURISTIC = "MFP"
 
         assert GREEDY_HEURISTIC in ["NFP", "MFP", "CR", "C2S"]
 

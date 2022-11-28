@@ -1,27 +1,27 @@
 import numpy as np
+import multiprocessing
 from src.simulation.simulator import Simulator
 from src.utilities.policies import *
+
+values = []
+results = []
 
 def main():
     """ the place where to run simulations and experiments. """
 
-
-'''
     drones = range(5,35,5)
     alphas = [0.1, 0.2, 0.05, 0.01, 0.15]
     gammas = [0.1, 0.2, 0.05, 0.01, 0.5]
     divs = [1000, 1200]
     epsilons = [15, 20, 25, 30]
-    values = [0.1, 0.2, 0.5, 1, 2, 3]
-    egreedy_grid_search(drones, alphas, gammas, divs, epsilons)
+    values = [2, 5]
+    # optimistic_grid_search(drones, alphas, gammas, divs, values)
 
+    np.save("results", np.array(results))
+    my_results = np.load("results.npy")
 
-    drones = [5, 10]
-    alphas = [0.1]
-    gammas = [0.1]
-    divs = [1000]
-    epsilons = [20]
-'''
+    for (seed, result) in my_results:
+        print("seed ", seed, " result ", result)
 
 
 def grid_search(drones, alphas, gammas, divs, policy):
@@ -31,6 +31,7 @@ def grid_search(drones, alphas, gammas, divs, policy):
     for alpha in alphas:
         for gamma in gammas:
             for div in divs:
+                sum = 0
                 for drone in drones:
                     sim = Simulator(drone, alpha, gamma, div, policy)
                     sim.run()
@@ -44,8 +45,17 @@ def grid_search(drones, alphas, gammas, divs, policy):
     data = np.flip(results, 0)
     np.save("Risultati.npy", np.array(results))
 
-    # SECOND PART GRID SEARCH: after testing the generalization of the best tuple of hyperparameters, we extract the best 10 tuples,
-    # so we can test them with the script for 30 seed for each num of drones, to assure the results stability.
+    for drone in range(5,30,5):
+        for seed in range(1, 20):
+            sim = Simulator(drone)
+            sim.run()
+            values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
+            sim.close()
+        results.append((seed, sum(values) / len(values)))
+
+    # np.save("Seed_Results.npy", np.array(resut))
+
+    print(results)
 
 
 def egreedy_grid_search(drones, alphas, gammas, divs, epsilons):
