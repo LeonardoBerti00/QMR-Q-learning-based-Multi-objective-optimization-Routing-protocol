@@ -53,7 +53,7 @@ class QLearningRouting(BASE_routing):
 
                 #select best action
                 for j in range(self.Q.shape[1]):
-                    if (self.Q[ next_state, j] > maxx):
+                    if (self.Q[next_state, j] > maxx):
                         max_action = j
                         maxx = self.Q[next_state, j]
 

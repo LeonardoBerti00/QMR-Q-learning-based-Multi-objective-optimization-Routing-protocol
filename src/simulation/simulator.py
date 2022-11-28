@@ -21,14 +21,17 @@ you can initialize the Simulator with non default values.
 
 class Simulator:
 
-    def __init__(self, n_drones,
+    def __init__(self,
+                 n_drones,
                  alpha,
                  gamma,
                  div,
+                 reward,
+                 negReward,
                  policy,
+                 seed,
                  len_simulation=15000,
                  time_step_duration=config.TS_DURATION,
-                 seed=config.SEED,
                  env_width=config.ENV_WIDTH,
                  env_height=config.ENV_HEIGHT,
                  drone_com_range=config.COMMUNICATION_RANGE_DRONE,
@@ -105,6 +108,9 @@ class Simulator:
         self.gamma = gamma
         self.div = div
         self.policy = policy
+        self.reward = reward
+        self.negReward = negReward
+        self.seed = seed
 
         # --------------- cell for drones -------------
         self.prob_size_cell_r = prob_size_cell_r
@@ -271,12 +277,13 @@ class Simulator:
         """ do some stuff at the end of simulation"""
         print("Closing simulation")
 
-        self.print_metrics(plot_id="final")
-        self.save_metrics(config.ROOT_EVALUATION_DATA + self.simulation_name)
+        #self.print_metrics(plot_id="final")
+        #self.save_metrics(config.ROOT_EVALUATION_DATA + self.simulation_name)
 
     def print_metrics(self, plot_id="final"):
         """ add signature """
-        self.metrics.print_overall_stats()
+        print("")
+        #self.metrics.print_overall_stats()
 
     def save_metrics(self, filename_path, save_pickle=False):
         """ add signature """
@@ -292,5 +299,5 @@ class Simulator:
             Notice that, expired or not found events will be counted with a max_delay
         """
         score = round(self.metrics.score(), 2)
-        print("Score sim " + self.simulation_name + ":", score)
+        #print("Score sim " + self.simulation_name + ":", score)
         return score
