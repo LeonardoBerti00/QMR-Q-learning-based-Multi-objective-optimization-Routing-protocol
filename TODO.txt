@@ -1,0 +1,8 @@
+-Per ME ri-modificare simulator
+-Cambiare nomi a lista results
+-Fixare UCB
+-Ottimizzare Optimistic e UCB.
+- Fare media su tutti i seed e num di droni per greedy ucb e opt
+-Prendere risultati greedy, UCB e opt e farne la plot contro GeoRouting.
+-Plottare packet-mean delivery time facendo media con tutti i droni.
+-Report.
