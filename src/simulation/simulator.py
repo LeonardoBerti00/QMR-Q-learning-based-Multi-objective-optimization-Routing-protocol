@@ -22,10 +22,10 @@ you can initialize the Simulator with non default values.
 class Simulator:
 
     def __init__(self, n_drones,
-                 alpha=0,
-                 gamma=0,
-                 div=0,
-                 policy=0,
+                 alpha,
+                 gamma,
+                 div,
+                 policy,
                  len_simulation=15000,
                  time_step_duration=config.TS_DURATION,
                  seed=config.SEED,

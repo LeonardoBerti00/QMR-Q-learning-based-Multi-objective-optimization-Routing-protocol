@@ -19,6 +19,7 @@ class QLearningRouting(BASE_routing):
 
         self.eps = 0
         self.optimistic_value = 0
+        self.c = 0
 
         self.policy = simulator.policy
         self.negReward = -5       #setting the hyperparameters for the negative reqard
@@ -127,6 +128,7 @@ class QLearningRouting(BASE_routing):
             self.taken_actions[str(packet.event_ref.identifier) + str(int(self.drone.identifier))] = [(state, int(id), next_state)]
             
 
+        # TODO: perche' sta cosi' in basso questo?
         #update ucb actions
         if isinstance(self.policy, UCB):
             self.ucb_actions[int(self.drone.identifier), int(id)] += 1
@@ -135,6 +137,7 @@ class QLearningRouting(BASE_routing):
 
     def UCB(self,opt_neighbors, state):
         max_a = -10000
+        chosen = None
         c = self.policy.c
         for i in range(len(opt_neighbors)):
             drone = opt_neighbors[i][1]
@@ -143,11 +146,10 @@ class QLearningRouting(BASE_routing):
             nt_a = self.ucb_actions[int(self.drone.identifier), drone.identifier]
             exploration_value = (c*math.sqrt((math.log(t)/(nt_a+0.01))))
 
-            if (Q_t + exploration_value > max_a):
+            if Q_t + exploration_value > max_a:
                 max_a = Q_t + exploration_value
                 chosen = drone
         return chosen
-
 
     def optimistic(self, opt_neighbors, state):
         # Prendere il max
@@ -167,18 +169,18 @@ class QLearningRouting(BASE_routing):
     def egreedy(self, opt_neighbors, state):
         r = random.randint(1, 100)
         maxx = -1000000
-        if (r > self.eps):
+        if r > self.eps:
             for i in range(len(opt_neighbors)):
                 id = int(opt_neighbors[i][1].identifier)
                 if (self.Q[int(self.drone.identifier),state, id] > maxx):
                     chosen = opt_neighbors[i][1]
                     maxx = self.Q[int(self.drone.identifier),state, id]
 
-            if (self.Q[int(self.drone.identifier),state, int(self.drone.identifier)] > maxx):
+            if self.Q[int(self.drone.identifier), state, int(self.drone.identifier)] > maxx:
                 return None
         else:
             r = random.randint(0, len(opt_neighbors))
-            if (r == len(opt_neighbors)):
+            if r == len(opt_neighbors):
                 return None
             else:
                 chosen = opt_neighbors[r][1]
