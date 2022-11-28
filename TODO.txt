@@ -1,7 +1,8 @@
 TODO:
     -Fixare UCB
-    -Ottimizzare Optimistic e UCB.
-    - Fare media su tutti i seed e num di droni per greedy ucb e opt
+    -Ottimizzare egreedy, Optimistic e UCB.
+    -Fare media su tutti i seed e num di droni per greedy ucb e opt (come metriche utilizzare sia 
+    packet_mean_delivery_time, sia il ratio)
     -Prendere risultati greedy, UCB e opt e farne la plot contro GeoRouting.
     -Plottare packet-mean delivery time facendo media con tutti i droni.
     -Report.
