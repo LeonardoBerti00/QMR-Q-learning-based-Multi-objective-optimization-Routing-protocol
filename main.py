@@ -15,17 +15,13 @@ def main():
     optimistic_values = [2, 5]
     c_values = [100, 1000]
     negRewards = [-2, -5]
-    grid_search(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)
-    grid_search2(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)
+    grid_search(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)         #grid search using the first reward function
+    grid_search2(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)        #grid search using the second reward function
     # sim = Simulator(5, 0.2, 0.2, 1000, UCB(1000))
     # sim.run()
     # sim.close()
 
-    # np.save("results", np.array(results))
-    # my_results = np.load("results.npy")
-    #
-    # for (seed, result) in my_results:
-    #     print("seed ", seed, " result ", result)
+
 
 
 def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards):
@@ -40,13 +36,13 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
                     for div in divs:
                         somma = 0
                         for drone in drones:
-                            for seed in range(1, 3):
-                                sim = Simulator(drone, alpha, gamma, div, neg, 1, policy, seed)
+                            for seed in range(1, 10):
+                                sim = Simulator(drone, alpha, gamma, div, neg, 1, policy, seed)              #the one is the reward function
                                 sim.run()
                                 # we compute the sum of the ratio to choose the best tuple of hyperparameters considering all the possible num of drones
                                 somma += len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
                                 sim.close()
-                        results.append((alpha, gamma, 1000, value, neg, somma))
+                        results.append((alpha, gamma, div, value, neg, somma))
 
 
     results = np.array(results)
@@ -60,13 +56,15 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
     seed_results = []
 
     for drone in drones:
-        values = []
+        values = []         #ratio
+        times = []          #packet mean delivery time
         for seed in range(1, 20):
             sim = Simulator(drone, alpha, gamma, div, 2, neg, policy, seed)
             sim.run()
             values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
             sim.close()
-        seed_results.append((drone, sum(values) / len(values)))
+            times.append(sim.metrics.packet_mean_delivery_time)
+        seed_results.append((drone, sum(values) / len(values), sum(times) / len(times)))
 
     np.save("Seed_Results.npy", np.array(seed_results))
 
@@ -83,7 +81,7 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
                 for gamma in gammas:
                     somma = 0
                     for drone in drones:
-                        for seed in range(1, 3):
+                        for seed in range(1, 10):
                             sim = Simulator(drone, alpha, gamma, 1000, neg, 2, policy, seed)
                             sim.run()
                             # we compute the sum of the ratio to choose the best tuple of hyperparameters considering all the possible num of drones
@@ -103,13 +101,15 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
     seed_results = []
 
     for drone in drones:
-        values = []
+        values = []         #ratio
+        times = []          #packet mean delivery time
         for seed in range(1, 20):
             sim = Simulator(drone, alpha, gamma, div, 2, neg, policy, seed)
             sim.run()
             values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
             sim.close()
-        seed_results.append((drone, sum(values) / len(values)))
+            times.append(sim.metrics.packet_mean_delivery_time)
+        seed_results.append((drone, sum(values) / len(values), sum(times) / len(times)))
 
     np.save("Seed_Results2.npy", np.array(seed_results))
 
