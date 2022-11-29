@@ -22,7 +22,7 @@ class DoubleQLearningRouting(BASE_routing):
         self.eps = 0
         self.optimistic_value = 0
         self.c = 0
-        self.rnd = np.random.RandomState(self.simulator.seed) #random seed
+        # self.rnd = np.random.RandomState(self.simulator.seed) #random seed
 
         self.policy = simulator.policy
 
@@ -34,7 +34,7 @@ class DoubleQLearningRouting(BASE_routing):
             for drone_id in range(self.simulator.n_drones):
                 for cell in range(self.num_cells):
                     for drone_action in range(self.simulator.n_drones):
-                        if (self.rnd < 0.5):
+                        if random.uniform(0, 1) < 0.5:
                             self.Q_a[drone_id, cell, drone_action] = self.optimistic_value
                         else:
                             self.Q_b[drone_id, cell, drone_action] = self.optimistic_value
@@ -57,7 +57,7 @@ class DoubleQLearningRouting(BASE_routing):
                 state, action, next_state = array[i]
 
                 #select best action
-                if (self.rnd < 0.5):
+                if random.uniform(0, 1) < 0.5:
                     for j in range(self.Q_a.shape[1]):
                         if (self.Q_a[next_state, j] > maxx):
                             max_action = j
@@ -77,7 +77,7 @@ class DoubleQLearningRouting(BASE_routing):
                     reward = self.computeReward(outcome, delay)
 
                 #Update Q tables
-                if (self.rnd < 0.5):
+                if random.uniform(0, 1) < 0.5:
                     self.Q_a[state, action] = self.Q_a[state, action] + self.a * (reward + self.l * self.Q_b[next_state, max_action] - self.Q_a[state, action])
                 else:
                     self.Q_b[state, action] = self.Q_b[state, action] + self.a * (reward + self.l * self.Q_a[next_state, max_action] - self.Q_b[state, action])
@@ -190,7 +190,7 @@ class DoubleQLearningRouting(BASE_routing):
         c = self.policy.c
         for i in range(len(opt_neighbors)):
             drone = opt_neighbors[i][1]
-            if (self.rnd <0.5):
+            if random.uniform(0, 1) <0.5:
                 Q_t = self.Q_a[state, drone.identifier]
             else:
                 Q_t = self.Q_b[state, drone.identifier]
@@ -210,7 +210,7 @@ class DoubleQLearningRouting(BASE_routing):
         chosen = None
         for i in range(len(opt_neighbors)):
             id = int(opt_neighbors[i][1].identifier)
-            if (self.rnd < 0.5):
+            if random.uniform(0, 1) < 0.5:
                 if (self.Q_a[state, id] > maxx):
                     chosen = opt_neighbors[i][1]
                     maxx = self.Q_a[state, id]
@@ -220,7 +220,7 @@ class DoubleQLearningRouting(BASE_routing):
                     maxx = self.Q_b[state, id]
 
         '''or self.q_b[state, int(self.drone.identifier)'''
-        if (self.Q_a[state, int(self.drone.identifier)] > maxx ):
+        if self.Q_a[state, int(self.drone.identifier)] > maxx:
             chosen = None
 
         return chosen
@@ -231,7 +231,7 @@ class DoubleQLearningRouting(BASE_routing):
         if (r > self.eps):
             for i in range(len(opt_neighbors)):
                 id = int(opt_neighbors[i][1].identifier)
-                if(self.rnd < 0.5):
+                if random.uniform(0, 1) < 0.5:
                     if (self.Q_a[state, id] > maxx):
                         chosen = opt_neighbors[i][1]
                         maxx = self.Q_a[state, id]

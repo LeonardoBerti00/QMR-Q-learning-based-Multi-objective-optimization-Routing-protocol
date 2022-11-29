@@ -15,13 +15,11 @@ def main():
     optimistic_values = [2, 5]
     c_values = [100, 1000]
     negRewards = [-2, -5]
-    grid_search(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)         #grid search using the first reward function
-    grid_search2(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)        #grid search using the second reward function
-    # sim = Simulator(5, 0.2, 0.2, 1000, UCB(1000))
-    # sim.run()
-    # sim.close()
-
-
+    # grid_search(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)         #grid search using the first reward function
+    # grid_search2(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)        #grid search using the second reward function
+    sim = Simulator(5, 0.2, 0.2, 1000, 1, Optimistic(100), 20)
+    sim.run()
+    sim.close()
 
 
 def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards):

@@ -1,4 +1,5 @@
 import random
+from operator import itemgetter
 from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
 from src.utilities.policies import *
@@ -12,12 +13,13 @@ class QLearningRouting(BASE_routing):
         self.Q = np.zeros((16, int(self.simulator.n_drones)))
         #self.Q = {}
         self.taken_actions = {}
-        self.ucb_actions = np.zeros((int(self.simulator.n_drones), int(self.simulator.n_drones)))  #dict for ucb function, instead of taken actions, we don't remove elements from it
+        self.ucb_actions = np.zeros(int(self.simulator.n_drones))
+        # self.ucb_actions = np.zeros((int(self.simulator.n_drones), int(self.simulator.n_drones)))  #dict for ucb function, instead of taken actions, we don't remove elements from it
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = simulator.alpha
         self.l = simulator.gamma
         self.div = simulator.div
-        self.negReward = simulator.negReward       #setting the hyperparameters for the negative reqard
+        self.neg_reward = simulator.neg_reward       #setting the hyperparameters for the negative reqard
         self.eps = 0
         self.optimistic_value = 0
         self.c = 0
@@ -57,9 +59,9 @@ class QLearningRouting(BASE_routing):
                         maxx = self.Q[next_state, j]
 
                 #Compute the reward
-                if (self.simulator.reward == 2):
+                if self.simulator.reward == 2:
                     reward = self.computeReward2(outcome, delay)
-                elif (self.simulator.reward==3):
+                elif self.simulator.reward==3:
                     reward = self.simulator.computeReward3(outcome, delay)
                 else:
                     reward = self.computeReward(outcome, delay)
@@ -75,13 +77,13 @@ class QLearningRouting(BASE_routing):
         if (reward == 1):
             return 1 + reward * (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
-            return self.negReward
+            return self.neg_reward
 
     def computeReward2(self, outcome, delay):                         #un altro possibile metodo di rewarding
         if outcome == 1:
             return 1 + 1.5 * np.log(2000 - delay)
         else:
-            return self.negReward
+            return self.neg_reward
 
     def computeReward3(self, outcome, delay):
         if outcome == 1:
@@ -166,8 +168,23 @@ class QLearningRouting(BASE_routing):
         self.past_optNeig = opt
         return state
     '''
-    def UCB(self,opt_neighbors, state):
-        max_a = -10000
+
+    def UCB(self, opt_neighbors, state):
+
+        neighbors = [drone for (_, drone) in opt_neighbors]
+        results = []
+
+        for neighbor in neighbors:
+            time_step = self.simulator.cur_step
+            n_t = self.ucb_actions[neighbor.identifier]
+            q_t = self.Q[state, neighbor.identifier]
+
+            results.append((neighbor, q_t + self.c * math.sqrt(math.log(time_step) / (n_t + 0.000001))))
+
+        return max(results, key = itemgetter(1))[0]
+
+    def UCB_2(self,opt_neighbors, state):
+        max_a = -10000000
         chosen = None
         c = self.policy.c
         for i in range(len(opt_neighbors)):

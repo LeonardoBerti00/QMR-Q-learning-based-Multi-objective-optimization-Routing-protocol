@@ -27,9 +27,9 @@ class Simulator:
                  gamma,
                  div,
                  reward,
-                 negReward,
+                 neg_reward,
                  policy,
-                 seed,
+                 seed=config.SEED,
                  len_simulation=15000,
                  time_step_duration=config.TS_DURATION,
                  env_width=config.ENV_WIDTH,
@@ -53,31 +53,6 @@ class Simulator:
                  prob_size_cell_r=config.CELL_PROB_SIZE_R,
                  simulation_name=""):
 
-    # def __init__(self, n_drones,
-    #              len_simulation,
-    #              time_step_duration=config.TS_DURATION,
-    #              seed=config.SEED,
-    #              env_width=config.ENV_WIDTH,
-    #              env_height=config.ENV_HEIGHT,
-    #              drone_com_range=config.COMMUNICATION_RANGE_DRONE,
-    #              drone_sen_range=config.SENSING_RANGE_DRONE,
-    #              drone_speed=config.DRONE_SPEED,
-    #              drone_max_buffer_size=config.DRONE_MAX_BUFFER_SIZE,
-    #              drone_max_energy=config.DRONE_MAX_ENERGY,
-    #              drone_retransmission_delta=config.RETRANSMISSION_DELAY,
-    #              drone_communication_success=config.COMMUNICATION_P_SUCCESS,
-    #              depot_com_range=config.DEPOT_COMMUNICATION_RANGE,
-    #              depot_coordinates=config.DEPOT_COO,
-    #              event_duration=config.EVENTS_DURATION,
-    #              event_generation_prob=config.P_FEEL_EVENT,
-    #              event_generation_delay=config.D_FEEL_EVENT,
-    #              packets_max_ttl=config.PACKETS_MAX_TTL,
-    #              show_plot=config.PLOT_SIM,
-    #              routing_algorithm=config.ROUTING_ALGORITHM,
-    #              communication_error_type=config.CHANNEL_ERROR_TYPE,
-    #              prob_size_cell_r=config.CELL_PROB_SIZE_R,
-    #              simulation_name=""):
-
         self.cur_step = None
         self.drone_com_range = drone_com_range
         self.drone_sen_range = drone_sen_range
@@ -93,7 +68,6 @@ class Simulator:
         self.depot_coordinates = depot_coordinates
         self.len_simulation = len_simulation
         self.time_step_duration = time_step_duration
-        self.seed = seed
         self.event_duration = event_duration
         self.event_max_retrasmission = math.ceil(event_duration / drone_retransmission_delta)  # 600 esempio
         self.event_generation_prob = event_generation_prob
@@ -109,7 +83,7 @@ class Simulator:
         self.div = div
         self.policy = policy
         self.reward = reward
-        self.negReward = negReward
+        self.neg_reward = neg_reward
         self.seed = seed
 
         # --------------- cell for drones -------------
@@ -277,13 +251,12 @@ class Simulator:
         """ do some stuff at the end of simulation"""
         print("Closing simulation")
 
-        #self.print_metrics(plot_id="final")
+        self.print_metrics(plot_id="final")
         #self.save_metrics(config.ROOT_EVALUATION_DATA + self.simulation_name)
 
     def print_metrics(self, plot_id="final"):
         """ add signature """
-        print("")
-        #self.metrics.print_overall_stats()
+        self.metrics.print_overall_stats()
 
     def save_metrics(self, filename_path, save_pickle=False):
         """ add signature """
