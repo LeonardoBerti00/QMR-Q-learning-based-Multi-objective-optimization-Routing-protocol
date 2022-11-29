@@ -38,15 +38,15 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
             for alpha in alphas:
                 for gamma in gammas:
                     for div in divs:
-                        sum = 0
+                        somma = 0
                         for drone in drones:
                             for seed in range(1, 3):
                                 sim = Simulator(drone, alpha, gamma, div, neg, 1, policy, seed)
                                 sim.run()
                                 # we compute the sum of the ratio to choose the best tuple of hyperparameters considering all the possible num of drones
-                                sum += len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
+                                somma += len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
                                 sim.close()
-                        results.append((alpha, gamma, 1000, value, neg, sum))
+                        results.append((alpha, gamma, 1000, value, neg, somma))
 
 
     results = np.array(results)
@@ -54,7 +54,7 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
     results = np.flip(results, 0)
     np.save("Risultati.npy", results)
 
-    (alpha, gamma, div, value, neg, sum) = results[0]
+    (alpha, gamma, div, value, neg, somma) = results[0]
     policy.add(value)
 
     seed_results = []
@@ -81,15 +81,15 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
             policy.value = value
             for alpha in alphas:
                 for gamma in gammas:
-                    sum = 0
+                    somma = 0
                     for drone in drones:
                         for seed in range(1, 3):
                             sim = Simulator(drone, alpha, gamma, 1000, neg, 2, policy, seed)
                             sim.run()
                             # we compute the sum of the ratio to choose the best tuple of hyperparameters considering all the possible num of drones
-                            sum += len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
+                            somma += len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
                             sim.close()
-                    results.append((alpha, gamma, 1000, value, neg, sum))
+                    results.append((alpha, gamma, 1000, value, neg, somma))
 
 
     results = np.array(results)
@@ -97,7 +97,7 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
     results = np.flip(results, 0)
     np.save("Risultati2.npy", results)
 
-    (alpha, gamma, div, value, neg, sum) = results[0]
+    (alpha, gamma, div, value, neg, somma) = results[0]
     policy.add(value)
 
     seed_results = []
