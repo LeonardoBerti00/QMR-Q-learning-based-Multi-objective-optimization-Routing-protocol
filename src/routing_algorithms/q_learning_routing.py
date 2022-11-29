@@ -20,7 +20,7 @@ class QLearningRouting(BASE_routing):
         self.l = simulator.gamma
         self.div = simulator.div
         self.neg_reward = simulator.neg_reward       #setting the hyperparameters for the negative reqard
-        self.eps = 0
+        self.eps = 50
         self.optimistic_value = 0
         self.c = 0
 
@@ -218,6 +218,7 @@ class QLearningRouting(BASE_routing):
     def egreedy(self, opt_neighbors, state):
         r = random.randint(1, 100)
         maxx = -1000000
+        self.eps = self.eps - (50 / (self.simulator.len_simulation/5))     #eps initially must be in the range [40, 50]
         if (r > self.eps):
             for i in range(len(opt_neighbors)):
                 id = int(opt_neighbors[i][1].identifier)
