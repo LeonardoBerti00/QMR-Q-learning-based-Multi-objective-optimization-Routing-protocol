@@ -51,7 +51,7 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
 
     results = np.array(results)
     results = results[np.argsort(results[:, 5])]
-    data = np.flip(results, 0)
+    results = np.flip(results, 0)
     np.save("Risultati.npy", np.array(results))
 
     (alpha, gamma, div, value, neg, sum) = results[0]
@@ -94,7 +94,7 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
 
     results = np.array(results)
     results = results[np.argsort(results[:, 5])]
-    data = np.flip(results, 0)
+    results = np.flip(results, 0)
     np.save("Risultati2.npy", np.array(results))
 
     (alpha, gamma, div, value, neg, sum) = results[0]
