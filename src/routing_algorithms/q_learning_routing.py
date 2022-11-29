@@ -29,10 +29,9 @@ class QLearningRouting(BASE_routing):
 
         # Riempire tabelle con initial value (2)
         if isinstance(self.policy, Optimistic):
-            for drone_id in range(self.simulator.n_drones):
-                for cell in range(self.num_cells):
-                    for drone_action in range(self.simulator.n_drones):
-                        self.Q[drone_id, cell, drone_action] = self.optimistic_value
+            for cell in range(self.num_cells):
+                for drone_action in range(self.simulator.n_drones):
+                    self.Q[cell, drone_action] = self.optimistic_value
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -60,6 +59,8 @@ class QLearningRouting(BASE_routing):
                 #Compute the reward
                 if (self.simulator.reward == 2):
                     reward = self.computeReward2(outcome, delay)
+                elif (self.simulator.reward==3):
+                    reward = self.simulator.computeReward3(outcome, delay)
                 else:
                     reward = self.computeReward(outcome, delay)
 
@@ -79,6 +80,12 @@ class QLearningRouting(BASE_routing):
     def computeReward2(self, outcome, delay):                         #un altro possibile metodo di rewarding
         if outcome == 1:
             return 1 + 1.5 * np.log(2000 - delay)
+        else:
+            return self.negReward
+
+    def computeReward3(self, outcome, delay):
+        if outcome == 1:
+            return -(outcome-delay)/100
         else:
             return self.negReward
 
@@ -119,13 +126,11 @@ class QLearningRouting(BASE_routing):
             self.c = self.policy.c
             chosen = self.UCB(opt_neighbors, state)
 
-
         #Select the id of the chosen drone
         if (chosen == None):
             id = self.drone.identifier
         else:
             id = chosen.identifier
-
 
         #Update taken actions
         if (str(packet.event_ref.identifier) in self.taken_actions):            #if I've done the same action with the same packet
@@ -133,8 +138,6 @@ class QLearningRouting(BASE_routing):
         else:
             self.taken_actions[str(packet.event_ref.identifier)] = [(state, int(id), next_state)]
 
-
-        # TODO: perche' sta cosi' in basso questo?
         #update ucb actions
         if isinstance(self.policy, UCB):
             self.ucb_actions[int(id)] += 1
@@ -205,7 +208,7 @@ class QLearningRouting(BASE_routing):
                     chosen = opt_neighbors[i][1]
                     maxx = self.Q[state, id]
 
-            if (self.Q[state, int(self.drone.identifier)] > maxx):
+            if (self.Q[state, int(self.drone.identifier)] >= maxx):
                 return None
         else:
             r = random.randint(0, len(opt_neighbors))
