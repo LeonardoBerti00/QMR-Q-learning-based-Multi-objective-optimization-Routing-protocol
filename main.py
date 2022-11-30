@@ -54,15 +54,15 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
     seed_results = []
 
     for drone in drones:
-        values = []         #ratio
-        times = []          #packet mean delivery time
+        values = []
+        times = []
         for seed in range(1, 20):
-            sim = Simulator(drone, alpha, gamma, div, 2, neg, policy, seed)
+            sim = Simulator(drone, alpha, gamma, div, 1, neg, policy, seed)
             sim.run()
-            values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
+            first_metric = len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
             sim.close()
-            times.append(sim.metrics.packet_mean_delivery_time)
-        seed_results.append((drone, values, times))
+            second_metric = sim.metrics.packet_mean_delivery_time
+            seed_results.append((drone, seed, first_metric, second_metric))
 
     np.save("Seed_Results.npy", np.array(seed_results))
 
@@ -99,15 +99,15 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
     seed_results = []
 
     for drone in drones:
-        values = []         #ratio
-        times = []          #packet mean delivery time
+        values = []
+        times = []
         for seed in range(1, 20):
-            sim = Simulator(drone, alpha, gamma, div, 2, neg, policy, seed)
+            sim = Simulator(drone, alpha, gamma, div, 1, neg, policy, seed)
             sim.run()
-            values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
+            first_metric = len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
             sim.close()
-            times.append(sim.metrics.packet_mean_delivery_time)
-        seed_results.append((drone, values, times))
+            second_metric = sim.metrics.packet_mean_delivery_time
+            seed_results.append((drone, seed, first_metric, second_metric))
 
     np.save("Seed_Results2.npy", np.array(seed_results))
 
