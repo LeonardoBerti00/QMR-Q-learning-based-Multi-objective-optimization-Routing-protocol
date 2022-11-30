@@ -62,7 +62,7 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
             values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
             sim.close()
             times.append(sim.metrics.packet_mean_delivery_time)
-        seed_results.append((drone, sum(values) / len(values), sum(times) / len(times)))
+        seed_results.append((drone, values, times))
 
     np.save("Seed_Results.npy", np.array(seed_results))
 
@@ -107,7 +107,7 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
             values.append(len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation)
             sim.close()
             times.append(sim.metrics.packet_mean_delivery_time)
-        seed_results.append((drone, sum(values) / len(values), sum(times) / len(times)))
+        seed_results.append((drone, values, times))
 
     np.save("Seed_Results2.npy", np.array(seed_results))
 
