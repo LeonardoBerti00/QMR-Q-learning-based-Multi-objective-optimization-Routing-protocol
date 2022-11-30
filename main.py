@@ -8,13 +8,13 @@ def main():
     """ the place where to run simulations and experiments. """
 
     drones = range(5,35,5)
-    alphas = [0.1, 0.2, 0.01, 0.05]
-    gammas = [0.1, 0.2, 0.01, 0.5]
+    alphas = [0.1, 0.2, 0.01]
+    gammas = [0.1, 0.01]
     divs = [1000]
-    epsilons = [15, 20, 25]
+    epsilons = [50]
     optimistic_values = [2, 5]
     c_values = [100, 1000]
-    negRewards = [-2, -5]
+    negRewards = [-2]
     # grid_search(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)         #grid search using the first reward function
     # grid_search2(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)        #grid search using the second reward function
     sim = Simulator(5, 0.2, 0.2, 1000, 1, Optimistic(100), 20)
@@ -56,7 +56,7 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
     for drone in drones:
         values = []
         times = []
-        for seed in range(1, 20):
+        for seed in range(1, 31):
             sim = Simulator(drone, alpha, gamma, div, 1, neg, policy, seed)
             sim.run()
             first_metric = len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
@@ -101,7 +101,7 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
     for drone in drones:
         values = []
         times = []
-        for seed in range(1, 20):
+        for seed in range(1, 31):
             sim = Simulator(drone, alpha, gamma, div, 1, neg, policy, seed)
             sim.run()
             first_metric = len(sim.metrics.drones_packets_to_depot) / sim.metrics.all_data_packets_in_simulation
