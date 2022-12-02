@@ -1,5 +1,4 @@
 import random
-from operator import itemgetter
 from src.routing_algorithms.BASE_routing import BASE_routing
 from src.utilities import utilities as util
 from src.utilities.policies import *
@@ -12,18 +11,16 @@ class QLearningRouting(BASE_routing):
         BASE_routing.__init__(self, drone, simulator)
         self.Q = np.zeros((16, int(self.simulator.n_drones)))
         #self.Q = {}
+        self.cont = 0
         self.taken_actions = {}
-        self.ucb_actions = np.zeros(int(self.simulator.n_drones))
-        # self.ucb_actions = np.zeros((int(self.simulator.n_drones), int(self.simulator.n_drones)))  #dict for ucb function, instead of taken actions, we don't remove elements from it
+        self.ucb_actions = np.zeros((int(self.simulator.n_drones)))  #dict for ucb function, instead of taken actions, we don't remove elements from it
         self.num_cells = int((self.simulator.env_height / self.simulator.prob_size_cell) * (self.simulator.env_width / self.simulator.prob_size_cell))
         self.a = simulator.alpha
         self.l = simulator.gamma
         self.div = simulator.div
-        self.neg_reward = simulator.neg_reward       #setting the hyperparameters for the negative reqard
-        self.eps = 50
+        self.negReward = simulator.negReward       #setting the hyperparameters for the negative reqard
         self.optimistic_value = 0
         self.c = 0
-
         self.policy = simulator.policy
 
         if isinstance(self.policy, UCB):
@@ -34,6 +31,12 @@ class QLearningRouting(BASE_routing):
             for cell in range(self.num_cells):
                 for drone_action in range(self.simulator.n_drones):
                     self.Q[cell, drone_action] = self.optimistic_value
+
+        if isinstance(self.policy, Epsilon):
+            self.eps = self.policy.epsilon
+
+        if isinstance(self.policy, egreedyGeo):
+            self.eps = self.policy.epsilon
 
     def feedback(self, drone, id_event, delay, outcome):
         """
@@ -59,12 +62,17 @@ class QLearningRouting(BASE_routing):
                         maxx = self.Q[next_state, j]
 
                 #Compute the reward
-                if self.simulator.reward == 2:
+                if (self.simulator.reward == 2):
                     reward = self.computeReward2(outcome, delay)
-                elif self.simulator.reward==3:
-                    reward = self.simulator.computeReward3(outcome, delay)
+#                    if (reward > 0):
+#                        print(reward)
+                elif (self.simulator.reward == 3):
+                    reward = self.computeReward3(outcome, delay)
                 else:
                     reward = self.computeReward(outcome, delay)
+#                    if (reward > 0):
+#                        print(reward)
+
 
                 #Update Q table
                 self.Q[state, action] = self.Q[state, action] + self.a * (reward + self.l * self.Q[next_state, max_action] - self.Q[state, action])
@@ -77,13 +85,13 @@ class QLearningRouting(BASE_routing):
         if (reward == 1):
             return 1 + reward * (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
-            return self.neg_reward
+            return self.negReward
 
     def computeReward2(self, outcome, delay):                         #un altro possibile metodo di rewarding
         if outcome == 1:
             return 1 + 1.5 * np.log(2000 - delay)
         else:
-            return self.neg_reward
+            return self.negReward
 
     def computeReward3(self, outcome, delay):
         if outcome == 1:
@@ -117,7 +125,6 @@ class QLearningRouting(BASE_routing):
 
         #Select the policy function
         if isinstance(self.policy, Epsilon):
-            self.eps = self.policy.epsilon
             chosen = self.egreedy(opt_neighbors, state)
 
         elif isinstance(self.policy, Optimistic):
@@ -127,6 +134,9 @@ class QLearningRouting(BASE_routing):
         elif isinstance(self.policy, UCB):
             self.c = self.policy.c
             chosen = self.UCB(opt_neighbors, state)
+
+        elif isinstance(self.policy, egreedyGeo):
+            chosen = self.egreedyGeo(opt_neighbors, state)
 
         #Select the id of the chosen drone
         if (chosen == None):
@@ -146,45 +156,9 @@ class QLearningRouting(BASE_routing):
 
         return chosen
 
-    '''
-    def QLAR(self, state, action, cost):
-        # select best action
-        for j in self.Q.keys():
-            if (self.Q[j] > maxx):
-                print(j)
-                max_action = int(j[-1])
-                maxx = self.Q[j]
-                next_state = j[:-1]
-
-        # Update Q table
-        self.Q[str(state) + str(action)] = self.Q[str(state) + str(action)] + self.a * (cost + self.l * self.Q[str(next_state), str(max_action)] - self.Q[str(state) + str(action)])
-
-        # Update past state
-        self.pastNeig = np.zeros((int(self.simulator.n_drones)))
-        for neig in opt:
-            drone_id = neig[1].identifier
-            self.pastNeig[drone_id] = 1
-
-        self.past_optNeig = opt
-        return state
-    '''
 
     def UCB(self, opt_neighbors, state):
-
-        neighbors = [drone for (_, drone) in opt_neighbors]
-        results = []
-
-        for neighbor in neighbors:
-            time_step = self.simulator.cur_step
-            n_t = self.ucb_actions[neighbor.identifier]
-            q_t = self.Q[state, neighbor.identifier]
-
-            results.append((neighbor, q_t + self.c * math.sqrt(math.log(time_step) / (n_t + 0.000001))))
-
-        return max(results, key = itemgetter(1))[0]
-
-    def UCB_2(self,opt_neighbors, state):
-        max_a = -10000000
+        max_a = -10000
         chosen = None
         c = self.policy.c
         for i in range(len(opt_neighbors)):
@@ -215,10 +189,34 @@ class QLearningRouting(BASE_routing):
 
         return chosen
 
+    def egreedyGeo(self, opt_neighbors, state):
+        r = random.randint(1, 100)
+        maxx = -1000000
+        self.eps = self.eps - (self.policy.epsilon / (self.simulator.len_simulation/5))     #eps initially must be in the range [40, 50]
+        if (r > self.eps):
+            for i in range(len(opt_neighbors)):
+                id = int(opt_neighbors[i][1].identifier)
+                if (self.Q[state, id] > maxx):
+                    chosen = opt_neighbors[i][1]
+                    maxx = self.Q[state, id]
+
+            if (self.Q[state, int(self.drone.identifier)] >= maxx):
+                return None
+        else:
+            depot_pos = self.drone.depot.coords
+            drone_pos = self.drone.coords
+            for hello_pkt, neighbor in opt_neighbors:
+                neighbor_pos = hello_pkt.cur_pos
+                FP = util.projection_on_line_between_points(drone_pos, depot_pos, neighbor_pos)
+                if FP > max_FP:
+                    max_FP = FP
+                    relay = neighbor
+        return chosen
+
     def egreedy(self, opt_neighbors, state):
         r = random.randint(1, 100)
         maxx = -1000000
-        self.eps = self.eps - (50 / (self.simulator.len_simulation/5))     #eps initially must be in the range [40, 50]
+        self.eps = self.eps - (self.policy.epsilon / (self.simulator.len_simulation/5))     #eps initially must be in the range [40, 50]
         if (r > self.eps):
             for i in range(len(opt_neighbors)):
                 id = int(opt_neighbors[i][1].identifier)
@@ -235,4 +233,3 @@ class QLearningRouting(BASE_routing):
             else:
                 chosen = opt_neighbors[r][1]
         return chosen
-
