@@ -18,7 +18,7 @@ class QLearningRouting(BASE_routing):
         self.a = simulator.alpha
         self.l = simulator.gamma
         self.div = simulator.div
-        self.negReward = simulator.negReward       #setting the hyperparameters for the negative reqard
+        self.negReward = simulator.neg_reward       #setting the hyperparameters for the negative reqard
         self.optimistic_value = 0
         self.c = 0
         self.policy = simulator.policy

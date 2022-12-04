@@ -7,19 +7,24 @@ from src.utilities.policies import *
 def main():
     """ the place where to run simulations and experiments. """
 
-    drones = range(5,35,5)
-    alphas = [0.1, 0.2, 0.01]
-    gammas = [0.1, 0.01]
+    # drones = range(5,35,5)
+    # alphas = [0.1, 0.2, 0.01]
+    # gammas = [0.1, 0.01]
+    # divs = [1000]
+    # epsilons = [50]
+    # optimistic_values = [5, 10, 1]
+    # c_values = [100, 1000]
+    # negRewards = [-2]
+
+    drones = [1]
+    alphas = [1]
+    gammas = [1]
     divs = [1000]
-    epsilons = [50]
-    optimistic_values = [2, 5]
-    c_values = [100, 1000]
+    optimistic_values = [1]
     negRewards = [-2]
-    # grid_search(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)         #grid search using the first reward function
-    # grid_search2(drones, alphas, gammas, divs, epsilons, Epsilon(), negRewards)        #grid search using the second reward function
-    sim = Simulator(5, 0.2, 0.2, 1000, 1, Optimistic(100), 20)
-    sim.run()
-    sim.close()
+
+    grid_search(drones, alphas, gammas, divs, optimistic_values, Optimistic(), negRewards)         #grid search using the first reward function
+    # grid_search2(drones, alphas, gammas, divs, optimistic_values, Optimistic(), negRewards)        #grid search using the second reward function
 
 
 def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards):
@@ -46,7 +51,7 @@ def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards)
     results = np.array(results)
     results = results[np.argsort(results[:, 5])]
     results = np.flip(results, 0)
-    np.save("Risultati.npy", results)
+    np.save("../Risultati.npy", results)
 
     (alpha, gamma, div, value, neg, somma) = results[0]
     policy.add(value)
@@ -91,7 +96,7 @@ def grid_search2(drones, alphas, gammas, divs, policy_values, policy, negRewards
     results = np.array(results)
     results = results[np.argsort(results[:, 5])]
     results = np.flip(results, 0)
-    np.save("Risultati2.npy", results)
+    np.save("../Risultati2.npy", results)
 
     (alpha, gamma, div, value, neg, somma) = results[0]
     policy.add(value)
