@@ -10,7 +10,8 @@ def main():
     eps = egreedyGeo()
     eps.value = 50
     sim = Simulator(5, 0.2, 0.01, 1000, -2, 1, eps, 1)
-
+    sim.run()
+    sim.close()
 
 def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards):
     # FIRST PART GRID SEARCH: we search between the possible tuple of hyperparameters and
