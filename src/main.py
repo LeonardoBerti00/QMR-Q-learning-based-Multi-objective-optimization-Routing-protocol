@@ -7,24 +7,9 @@ from src.utilities.policies import *
 def main():
     """ the place where to run simulations and experiments. """
 
-    # drones = range(5,35,5)
-    # alphas = [0.1, 0.2, 0.01]
-    # gammas = [0.1, 0.01]
-    # divs = [1000]
-    # epsilons = [50]
-    # optimistic_values = [5, 10, 1]
-    # c_values = [100, 1000]
-    # negRewards = [-2]
-
-    drones = [1]
-    alphas = [1]
-    gammas = [1]
-    divs = [1000]
-    optimistic_values = [1]
-    negRewards = [-2]
-
-    grid_search(drones, alphas, gammas, divs, optimistic_values, Optimistic(), negRewards)         #grid search using the first reward function
-    # grid_search2(drones, alphas, gammas, divs, optimistic_values, Optimistic(), negRewards)        #grid search using the second reward function
+    eps = Epsilon()
+    eps.value = 50
+    sim = Simulator(5, 0.2, 0.01, 1000, -2, 1, eps, 1)
 
 
 def grid_search(drones, alphas, gammas, divs, policy_values, policy, negRewards):
