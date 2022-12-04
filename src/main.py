@@ -7,8 +7,7 @@ from src.utilities.policies import *
 def main():
     """ the place where to run simulations and experiments. """
 
-    eps = egreedyGeo()
-    eps.value = 50
+    eps = egreedyGeo(50)
     sim = Simulator(5, 0.2, 0.01, 1000, -2, 1, eps, 1)
     sim.run()
     sim.close()
