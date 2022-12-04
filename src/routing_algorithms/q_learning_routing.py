@@ -76,7 +76,7 @@ class QLearningRouting(BASE_routing):
     def computeReward(self, outcome, delay):
         reward = outcome
         if (reward == 1):
-            return 1 + reward * (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
+            return 1 + (1 / (delay/self.div))               #maggiore è l delay minore è il reward perchè vuol dire che abbiamo rischiato l'expire
         else:
             return self.negReward
 
