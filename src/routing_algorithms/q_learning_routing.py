@@ -64,15 +64,8 @@ class QLearningRouting(BASE_routing):
                 #Compute the reward
                 if (self.simulator.reward == 2):
                     reward = self.computeReward2(outcome, delay)
-#                    if (reward > 0):
-#                        print(reward)
-                elif (self.simulator.reward == 3):
-                    reward = self.computeReward3(outcome, delay)
                 else:
                     reward = self.computeReward(outcome, delay)
-#                    if (reward > 0):
-#                        print(reward)
-
 
                 #Update Q table
                 self.Q[state, action] = self.Q[state, action] + self.a * (reward + self.l * self.Q[next_state, max_action] - self.Q[state, action])
@@ -90,12 +83,6 @@ class QLearningRouting(BASE_routing):
     def computeReward2(self, outcome, delay):                         #un altro possibile metodo di rewarding
         if outcome == 1:
             return 1 + 1.5 * np.log(2000 - delay)
-        else:
-            return self.negReward
-
-    def computeReward3(self, outcome, delay):
-        if outcome == 1:
-            return -(outcome-delay)/100
         else:
             return self.negReward
 
