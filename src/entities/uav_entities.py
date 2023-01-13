@@ -159,30 +159,46 @@ class Packet(Entity):
 
 class DataPacket(Packet):
     """ Basically a Packet"""
-
     def __init__(self, time_step_creation, simulator, event_ref: Event = None):
         super().__init__(time_step_creation, simulator, event_ref)
+        self.time_step_creation = time_step_creation
 
 
 class ACKPacket(Packet):
-    def __init__(self, src_drone, dst_drone, simulator, acked_packet, time_step_creation=None):
+    def __init__(self, src_drone, dst_drone, simulator, acked_packet, best_action, time_step_creation=None):
         super().__init__(time_step_creation, simulator, None)
         self.acked_packet = acked_packet  # packet that the drone who creates it wants to ACK
 
         # source and destination of a packet
         self.src_drone = src_drone
         self.dst_drone = dst_drone
+        self.best_action = best_action
 
 
-class HelloPacket(Packet):
+class FeedbackPacket(Packet):
+    def __init__(self, src_drone, dst_drone, simulator, best_action, time_step_creation=None):
+        super().__init__(time_step_creation, simulator, None)
+
+        # source and destination of a packet
+        self.src_drone = src_drone
+        self.dst_drone = dst_drone
+        self.best_action = best_action
+
+
+class HelloPacket():
     """ The hello message is responsible to give info about neighborhood """
 
-    def __init__(self, src_drone, time_step_creation, simulator, cur_pos, speed, next_target):
-        super().__init__(time_step_creation, simulator, None)
+    def __init__(self, src_drone, cur_pos, energy, speed, next_target, delay, dis_fac, received_pck, sended_ack):
+        self.src_drone = src_drone
         self.cur_pos = cur_pos
+        self.res_nrg = energy
         self.speed = speed
         self.next_target = next_target
-        self.src_drone = src_drone  # Don't use this
+        self.delay = delay
+        self.dis_fac = dis_fac
+        self.received_pck = received_pck
+        self.sended_ack = sended_ack
+
 
 
 # ------------------ Depot ----------------------
@@ -193,35 +209,31 @@ class Depot(Entity):
         super().__init__(id(self), coords, simulator)
         self.communication_range = communication_range
 
-        self.__buffer = list()  # also with duplicated packets
+        self.buffer = list()  # also with duplicated packets
 
     def all_packets(self):
-        return self.__buffer
+        return self.buffer
 
     def transfer_notified_packets(self, drone, cur_step):
         """ function called when a drone wants to offload packets to the depot """
 
         packets_to_offload = drone.all_packets()
-        self.__buffer += packets_to_offload
+        self.buffer += packets_to_offload
 
         for pck in packets_to_offload:
 
             if self.simulator.routing_algorithm.name not in "GEO" "RND":
 
                 feedback = 1
-                delivery_delay = cur_step - pck.event_ref.current_time
+                delivery_delay = cur_step - pck[0].event_ref.current_time
 
-                #print(len(self.simulator.drones))
-                for drone in self.simulator.drones:
-                    drone.routing_algorithm.feedback(drone,
-                                                     pck.event_ref.identifier,
-                                                     delivery_delay,
-                                                     feedback)
+                drone.routing_algorithm.feedback(pck[0].event_ref.identifier,
+                                                     feedback, 0)
 
             # add metrics: all the packets notified to the depot
-            self.simulator.metrics.drones_packets_to_depot.add((pck, cur_step))
-            self.simulator.metrics.drones_packets_to_depot_list.append((pck, cur_step))
-            pck.time_delivery = cur_step
+            self.simulator.metrics.drones_packets_to_depot.add((pck[0], cur_step))
+            self.simulator.metrics.drones_packets_to_depot_list.append((pck[0], cur_step))
+            pck[0].time_delivery = cur_step
 
 
 # ------------------ Drone ----------------------
@@ -231,7 +243,6 @@ class Drone(Entity):
 
         super().__init__(identifier, path[0], simulator)
 
-
         self.depot = depot
         self.path = path
         self.speed = self.simulator.drone_speed
@@ -239,25 +250,39 @@ class Drone(Entity):
         self.communication_range = self.simulator.drone_com_range
         self.buffer_max_size = self.simulator.drone_max_buffer_size
         self.residual_energy = self.simulator.drone_max_energy
+        self.initial_energy = self.simulator.drone_max_energy
         self.come_back_to_mission = False  # if i'm coming back to my applicative mission
         self.last_move_routing = False  # if in the last step i was moving to depot
+
+        #new attributes
+        self.neighbor_table = np.zeros((int(self.simulator.n_drones)+1, 13))
+        self.neighbor_table[:, 9] = 0.5
+        self.neighbor_table[:, 10] = 0.3
+        self.neighbor_table[:, 12] = 0.1
+        self.queuing_delay = 1
+        self.queuing_delays = []
+        self.actual_delays = []
+        self.sended_ack = {}             #save the sent ack packet to compute the link quality
+        self.delays = [ [] for i in range(self.simulator.n_drones)]     #we save the past mac delays to compute the mean and std
+        self.discount_factor = 0
+        self.sended_pck = {}              #save the sent data packet to compute the MAC delay
+        self.received_pck = {}
+        self.received_ack = {}
 
         # dynamic parameters
         self.tightest_event_deadline = None  # used later to check if there is an event that is about to expire
         self.current_waypoint = 0
-
-        self.__buffer = []  # contains the packets
-
+        self.buffer = []  # contains the packets
         self.distance_from_depot = 0
         self.move_routing = False  # if true, it moves to the depot
 
         # setup drone routing algorithm
         self.routing_algorithm = self.simulator.routing_algorithm.value(self, self.simulator)
 
-        # drone state simulator
-
         # last mission coord to restore the mission after movement
         self.last_mission_coords = None
+
+
 
     def update_packets(self, cur_step):
         """
@@ -270,27 +295,27 @@ class Drone(Entity):
         tmp_buffer = []
         self.tightest_event_deadline = np.nan
 
-        for pck in self.__buffer:
+        for pck, src, t in self.buffer:
             if not pck.is_expired(cur_step):
-                tmp_buffer.append(pck)  # append again only if it is not expired
+                tmp_buffer.append((pck, src, t))  # append again only if it is not expired
                 self.tightest_event_deadline = np.nanmin([self.tightest_event_deadline, pck.event_ref.deadline])
 
             else:
 
                 to_remove_packets += 1
-
+                '''
                 if self.simulator.routing_algorithm.name not in "GEO" "RND":
 
-                    feedback = -1
+                    #feedback = -1
                     drone = self
                     #print(len(self.simulator.drones))
-                    for drone in self.simulator.drones:
+                    #for drone in self.simulator.drones:
                         drone.routing_algorithm.feedback(drone,
                                                          pck.event_ref.identifier,
                                                          self.simulator.event_duration,
                                                          feedback)
-
-        self.__buffer = tmp_buffer
+                '''
+        self.buffer = tmp_buffer
 
         if self.buffer_length() == 0:
             self.move_routing = False
@@ -304,6 +329,7 @@ class Drone(Entity):
         time_to_depot = self.distance_from_depot / self.speed
         event_time_to_dead = (self.tightest_event_deadline - cur_step) * self.simulator.time_step_duration
         return event_time_to_dead - 5 < time_to_depot <= event_time_to_dead  # 5 seconds of tolerance
+
 
     def next_move_to_mission_point(self):
         """ get the next future position of the drones, according the mission """
@@ -327,28 +353,26 @@ class Drone(Entity):
         else:
             return ((1 - t) * p0[0] + t * p1[0]), ((1 - t) * p0[1] + t * p1[1])
 
+
     def feel_event(self, cur_step):
         """
         feel a new event, and adds the packet relative to it, in its buffer.
             if the drones is doing movement the packet is not added in the buffer
-         """
+        """
         ev = Event(self.coords, cur_step, self.simulator)  # the event
         pk = ev.as_packet(cur_step, self)  # the packet of the event
         if not self.move_routing and not self.come_back_to_mission:
-            self.__buffer.append(pk)
+            self.buffer.append((pk, self, cur_step))
             self.simulator.metrics.all_data_packets_in_simulation += 1
         else:  # store the events that are missing due to movement routing
             self.simulator.metrics.events_not_listened.add(ev)
 
-    def accept_packets(self, packets):
+
+    def accept_packets(self, packet, src_drone, current_ts):
         """ Self drone adds packets of another drone, when it feels it passing by. """
+        if not self.is_known_packet(packet):
+            self.buffer.append((packet, src_drone, current_ts))
 
-        for packet in packets:
-            # add if not notified yet, else don't, proprietary drone will delete all packets, but it is ok
-            # because they have already been notified by someone already
-
-            if not self.is_known_packet(packet):
-                self.__buffer.append(packet)
 
     def routing(self, drones, depot, cur_step):
         """ do the routing """
@@ -383,33 +407,52 @@ class Drone(Entity):
         # set the last move routing
         self.last_move_routing = self.move_routing
 
+        self.updateEnergy()
+
+
+    def updateEnergy(self):
+        self.residual_energy -= self.speed
+
     def is_full(self):
         return self.buffer_length() == self.buffer_max_size
 
     def is_known_packet(self, packet: DataPacket):
         """ Returns True if drone has already a similar packet (i.e., referred to the same event).  """
-        for pk in self.__buffer:
+        for pk, _, _ in self.buffer:
             if pk.event_ref == packet.event_ref:
                 return True
         return False
 
     def empty_buffer(self):
-        self.__buffer = []
+        self.buffer = []
 
     def all_packets(self):
-        return self.__buffer
+        return self.buffer
 
     def buffer_length(self):
-        return len(self.__buffer)
+        return len(self.buffer)
+
+    def updateACK(self):      #if we don't receive an ACK within 200 time steps from sending, we give the min reward
+        for key in self.sended_pck:
+            if (self.simulator.cur_step > self.sended_pck[key][0] + 200):
+                self.routing_algorithm.feedback(key, -1, self.sended_pck[key][1], self.neighbor_table[self.sended_pck[key][12]])
+                self.sended_pck.remove(key)
+
 
     def remove_packets(self, packets):
-        """ Removes the packets from the buffer. """
+        """ Removes the acknowledged packets from the buffer. """
+        copy = self.buffer.copy()
         for packet in packets:
-            if packet in self.__buffer:
-                self.__buffer.remove(packet)
-                if config.DEBUG:
-                    print("ROUTING del: drone: " + str(self.identifier) + " - removed a packet id: " + str(
-                        packet.identifier))
+            for i in range(len(copy)):
+                pck, d, f = copy[i]
+                if (packet == pck):
+                    j = self.buffer.index((pck, d, f))
+                    del self.buffer[j]
+                    self.sended_pck.pop(packet.event_ref)
+                    if config.DEBUG:
+                        print("ROUTING del: drone: " + str(self.identifier) + " - removed a packet id: " + str(
+                            packet.identifier))
+
 
     def next_target(self):
         if self.move_routing:
@@ -423,7 +466,7 @@ class Drone(Entity):
                 return self.path[self.current_waypoint + 1]
 
     def __move_to_mission(self, time):
-        """ When invoked the drone moves on the map. TODO: Add comments and clean.
+        """ When invoked the drone moves on the map.
             time -> time_step_duration (how much time between two simulation frame)
         """
         if self.current_waypoint >= len(self.path) - 1:
@@ -459,7 +502,7 @@ class Drone(Entity):
             self.coords = self.path[self.current_waypoint]
 
     def __move_to_depot(self, time):
-        """ When invoked the drone moves to the depot. TODO: Add comments and clean.
+        """ When invoked the drone moves to the depot.
             time -> time_step_duration (how much time between two simulation frame)
         """
         p0 = self.coords

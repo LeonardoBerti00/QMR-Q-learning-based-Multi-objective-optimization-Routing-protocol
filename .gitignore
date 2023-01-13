@@ -1,9 +1,0 @@
-data/plots/*
-data/plots/evaluation_tests/*
-multi_main.py
-*/__pycache__
-*/*/__pycache__
-.idea
-.DS_Store
-
-

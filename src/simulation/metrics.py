@@ -125,12 +125,12 @@ class Metrics:
         self.event_mean_delivery_time = np.mean(event_delivery_times) * self.simulator.time_step_duration
 
     def print_overall_stats(self):
-        return
         """
         print the overall stats of the alg execution
         @return:
         """
-        self.other_metrics()
+
+        '''
         print(f"*** Relays ***")
         print("Mean number of relays: ", np.nanmean(self.mean_numbers_of_possible_relays))
 
@@ -146,7 +146,7 @@ class Metrics:
         print("Number of packets to depot: ", self.number_of_packets_to_depot)
         print("Packet mean delivery time (seconds): ", self.packet_mean_delivery_time)
         print("Packet delivery ratio: ", self.number_of_packets_to_depot/self.all_data_packets_in_simulation)
-
+        '''
     def info_mission(self):
         """
         save all the mission / sim setup

@@ -1,5 +1,5 @@
 from src.routing_algorithms.georouting import GeoRouting
-from src.routing_algorithms.q_learning_routing import QLearningRouting
+from src.routing_algorithms.q_learning_routing import QMAR
 from src.routing_algorithms.random_routing import RandomRouting
 from enum import Enum
 
@@ -51,7 +51,7 @@ SAVE_PLOT_DIR = "data/plots/"
 # add constants here...
 
 # ----------------------------- SIMULATION PARAMS. ---------------------------- #
-SIM_DURATION = 15000  # int: steps of simulation. # ***
+SIM_DURATION = 30000  # int: steps of simulation. # ***
 TS_DURATION = 0.150  # float: seconds duration of a step in seconds.
 SEED = 20  # int: seed of this simulation.
 
@@ -61,7 +61,7 @@ ENV_HEIGHT = 1500  # float: meters, height of environment.
 
 # events
 EVENTS_DURATION = 2000  # SIM_DURATION  # int: steps, number of time steps that an event lasts  -> to seconds = step * step_duration.
-D_FEEL_EVENT = 65  # int: steps, a new packet is felt (generated on the drone) every 'D_FEEL_EVENT' steps. # ***
+D_FEEL_EVENT = 130  # int: steps, a new packet is felt (generated on the drone) every 'D_FEEL_EVENT' steps. # ***
 P_FEEL_EVENT = .8  # float: probability that the drones feels the event generated on the drone. # ***
 
 """ e.g. given D_FEEL_EVENT = 500, P_FEEL_EVENT = .5, every 500 steps with probability .5 the drone will feel an event."""
@@ -71,7 +71,7 @@ COMMUNICATION_RANGE_DRONE = 200  # float: meters, communication range of the dro
 SENSING_RANGE_DRONE = 0  # float: meters, the sensing range of the drones.
 DRONE_SPEED = 8  # float: m/s, drone speed.
 DRONE_MAX_BUFFER_SIZE = 100  # int: max number of packets in the buffer of a drone.
-DRONE_MAX_ENERGY = 1000000  # int: max energy of a drone.
+DRONE_MAX_ENERGY = 200000  # int: max energy of a drone.
 
 # depot
 DEPOT_COMMUNICATION_RANGE = 200  # float: meters, communication range of the depot.
@@ -81,7 +81,7 @@ DEPOT_COO = (750, 0)  # (float, float): coordinates of the depot.
 class RoutingAlgorithm(Enum):
     GEO = GeoRouting
     RND = RandomRouting
-    QL = QLearningRouting
+    QL = QMAR
 
     @staticmethod
     def keylist():
