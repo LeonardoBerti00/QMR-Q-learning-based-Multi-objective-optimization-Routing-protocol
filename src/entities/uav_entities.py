@@ -265,7 +265,7 @@ class Drone(Entity):
         self.sended_ack = {}             #save the sent ack packet to compute the link quality
         self.delays = [ [] for i in range(self.simulator.n_drones)]     #we save the past mac delays to compute the mean and std
         self.discount_factor = 0
-        self.sended_pck = {}              #save the sent data packet to compute the MAC delay
+        self.sended_pck = {}              #save the sent data packet to compute the MAC delay and to give the min reward when necessary
         self.received_pck = {}
         self.received_ack = {}
 
